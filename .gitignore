@@ -1,0 +1,27 @@
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+
+# Artefactos generados (viven en el volumen de Docker)
+artifacts/
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
