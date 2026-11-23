@@ -9,7 +9,7 @@ Trabajo final de TALLERSISIA: un modelo de clasificación entrenado con CRISP-ML
 | Componente | Estado |
 |---|---|
 | Base de datos (PostgreSQL + Alembic) | ✅ Esquema inicial |
-| Modelo de ML | ⏳ PR 2 |
+| Modelo de ML (CRISP-ML(Q)) | ✅ v1 aprobado: ROC-AUC 0,870 |
 | API REST | ⏳ PR 3 |
 | Cliente web | ⏳ PR 4 |
 
