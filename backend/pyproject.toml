@@ -1,0 +1,52 @@
+[project]
+name = "depression-risk-backend"
+version = "0.1.0"
+description = "API REST y ciclo de ML para estimar el riesgo de depresión en estudiantes"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic>=1.14,<2",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic-settings>=2.6,<3",
+    "sqlalchemy>=2.0.36,<2.1",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "N", "RUF", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests: asserts, credenciales ficticias y SQL armado con nombres de tabla constantes.
+"tests/**" = ["S101", "S105", "S608"]
+# Migraciones autogeneradas: se revisan a mano, pero se respeta el estilo de Alembic.
+"migrations/versions/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+files = ["src", "tests", "migrations"]
+explicit_package_bases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = ["integration: requiere un PostgreSQL real"]

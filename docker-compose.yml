@@ -1,0 +1,33 @@
+name: depression-risk
+
+services:
+  db:
+    image: postgres:16.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?definir POSTGRES_DB en .env}
+      POSTGRES_USER: ${POSTGRES_USER:?definir POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?definir POSTGRES_PASSWORD en .env}
+    ports:
+      # Solo accesible desde la máquina local, nunca expuesto a la red.
+      - "127.0.0.1:${POSTGRES_PORT:?definir POSTGRES_PORT en .env}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    networks: [internal]
+
+volumes:
+  pgdata:
+
+networks:
+  internal:

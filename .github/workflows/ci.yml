@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (lint, tipos, tests)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      db:
+        image: postgres:16.6-alpine
+        env:
+          POSTGRES_DB: ci_db
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_password_only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d ci_db"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    # Valores ficticios exclusivos de CI; los reales viven en .env (fuera del repo).
+    env:
+      ENVIRONMENT: test
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ci_db
+      POSTGRES_USER: ci_user
+      POSTGRES_PASSWORD: ci_password_only
+      JWT_SECRET: ci-only-secret-not-used-anywhere-else-000
+      JWT_ISSUER: depression-risk-api
+      JWT_AUDIENCE: depression-risk-web
+      JWT_EXPIRE_MINUTES: "60"
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: ci_admin_password
+      CORS_ORIGINS: '["http://localhost:5173"]'
+      ARTIFACTS_DIR: ./artifacts
+      MAX_UPLOAD_MB: "10"
+      TRAINING_TIMEOUT_SECONDS: "900"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.9"
+          enable-cache: true
+
+      - name: Instalar dependencias (lockfile)
+        run: uv sync --locked --python 3.12
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Type checking
+        run: uv run mypy
+
+      - name: Migraciones
+        run: uv run alembic upgrade head
+
+      - name: Tests
+        run: uv run pytest
