@@ -10,14 +10,7 @@ from alembic import context
 from sqlalchemy import Connection, create_engine
 
 from app.config import get_settings
-
-# Importar los ORM registra sus tablas en Base.metadata.
-from app.modules.auth.infrastructure import orm as _auth_orm  # noqa: F401
-from app.modules.datasets.infrastructure import orm as _datasets_orm  # noqa: F401
-from app.modules.model_registry.infrastructure import orm as _registry_orm  # noqa: F401
-from app.modules.prediction.infrastructure import orm as _prediction_orm  # noqa: F401
-from app.modules.training.infrastructure import orm as _training_orm  # noqa: F401
-from app.shared.database import Base
+from app.orm import Base
 
 config = context.config
 if config.config_file_name is not None and not config.attributes.get("connection"):

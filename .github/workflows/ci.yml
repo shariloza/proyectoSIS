@@ -17,7 +17,7 @@ jobs:
   backend:
     name: Backend (lint, tipos, tests)
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: backend
@@ -36,6 +36,7 @@ jobs:
 
     # Valores ficticios exclusivos de CI; los reales viven en .env (fuera del repo).
     env:
+      OPENBLAS_NUM_THREADS: "1"
       ENVIRONMENT: test
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"

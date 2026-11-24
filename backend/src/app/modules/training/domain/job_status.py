@@ -7,3 +7,6 @@ class JobStatus(StrEnum):
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
     TIMED_OUT = "TIMED_OUT"
+
+
+ACTIVE_STATUSES = frozenset({JobStatus.PENDING, JobStatus.RUNNING})

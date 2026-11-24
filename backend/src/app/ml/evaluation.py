@@ -125,3 +125,22 @@ def check_acceptance(
 def no_regression(candidate_auc: float, active_auc: float) -> bool:
     """C9: un re-entrenamiento no puede empeorar al modelo activo más de lo tolerado."""
     return candidate_auc >= active_auc - MAX_AUC_REGRESSION
+
+
+def with_regression_check(
+    acceptance: dict[str, Any], candidate_auc: float, active_auc: float
+) -> dict[str, Any]:
+    """Agrega C9 al reporte de aceptación de un candidato de re-entrenamiento."""
+    passed = no_regression(candidate_auc, active_auc)
+    criterion = {
+        "code": "C9",
+        "description": f"No empeorar el ROC-AUC del modelo activo ({active_auc}) en más de",
+        "threshold": MAX_AUC_REGRESSION,
+        "operator": "<=",
+        "value": round(active_auc - candidate_auc, 4),
+        "passed": passed,
+    }
+    return {
+        "approved": acceptance["approved"] and passed,
+        "criteria": [*acceptance["criteria"], criterion],
+    }

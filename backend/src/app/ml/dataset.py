@@ -9,6 +9,7 @@
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import BinaryIO
 
 import pandas as pd
 
@@ -59,9 +60,9 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def read_csv(path: Path) -> pd.DataFrame:
+def read_csv(source: Path | BinaryIO) -> pd.DataFrame:
     try:
-        return pd.read_csv(path)
+        return pd.read_csv(source)
     except (pd.errors.ParserError, UnicodeDecodeError, pd.errors.EmptyDataError) as exc:
         raise DatasetValidationError([f"el archivo no es un CSV legible ({exc})"]) from None
 
