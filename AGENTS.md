@@ -14,10 +14,20 @@ Guía para agentes de IA (y personas) que trabajen en este repositorio.
 - **Base de datos:** todo cambio de esquema se hace con una migración de Alembic revisada a mano. El test `test_migration_matches_orm_models` falla si el ORM y las migraciones divergen.
 - **Configuración:** toda variable nueva se agrega a `Settings` (con validación), a `.env.example` y al bloque `env` del CI.
 
-## Comandos (desde `backend/`)
+- **Contrato de la API:** al cambiar endpoints, regenerar `docs/openapi.json` y los tipos del
+  frontend (`npm run gen:api`). El CI falla si quedan desincronizados.
+- **ML:** columnas, rangos y categorías se definen solo en `backend/src/app/ml/schema.py`.
+- **Documentación:** describe el sistema real. Al cambiar el comportamiento, actualizar `docs/`.
+
+## Comandos
 ```bash
+# backend/
 uv run ruff check . && uv run ruff format --check . && uv run mypy && uv run pytest
 uv run alembic revision --autogenerate -m "<descripción>"   # luego revisar el archivo generado
+uv run python -m app.openapi ../docs/openapi.json            # exportar el contrato
+# frontend/
+npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
+npm run e2e                                                  # requiere docker compose up
 ```
 
 ## Prohibido
