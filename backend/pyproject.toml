@@ -5,14 +5,19 @@ description = "API REST y ciclo de ML para estimar el riesgo de depresión en es
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "alembic>=1.14,<2",
+    "joblib>=1.4,<2",
+    "pandas>=2.2,<3",
     "psycopg[binary]>=3.2,<4",
     "pydantic-settings>=2.6,<3",
+    "scikit-learn>=1.6,<1.8",
     "sqlalchemy>=2.0.36,<2.1",
 ]
 
 [dependency-groups]
 dev = [
+    "matplotlib>=3.9,<4",
     "mypy>=1.13",
+    "pandas-stubs>=2.2",
     "pytest>=8.3",
     "ruff>=0.8",
 ]
@@ -45,6 +50,11 @@ plugins = ["pydantic.mypy"]
 mypy_path = "src"
 files = ["src", "tests", "migrations"]
 explicit_package_bases = true
+
+# scikit-learn y joblib no publican tipos.
+[[tool.mypy.overrides]]
+module = ["sklearn.*", "joblib"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
