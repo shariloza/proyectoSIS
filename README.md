@@ -11,7 +11,7 @@ Trabajo final de TALLERSISIA: un modelo de clasificación entrenado con CRISP-ML
 | Base de datos (PostgreSQL + Alembic) | ✅ |
 | Modelo de ML (CRISP-ML(Q)) | ✅ v1 aprobado: ROC-AUC 0,870 |
 | API REST + worker de re-entrenamiento | ✅ Swagger en `/docs` |
-| Cliente web | ⏳ PR 4 |
+| Cliente web (React + Vite + TypeScript) | ✅ http://127.0.0.1:8080 |
 
 ## Requisitos
 
@@ -24,9 +24,9 @@ Trabajo final de TALLERSISIA: un modelo de clasificación entrenado con CRISP-ML
 # 1. Variables de entorno: copia la plantilla y reemplaza los valores marcados con CAMBIAR
 cp .env.example .env    # PowerShell: Copy-Item .env.example .env
 
-# 2. Todo el sistema: base de datos, API y worker
+# 2. Todo el sistema: base de datos, API, worker y cliente web
 docker compose up -d --build
-docker compose ps          # db, api y worker deben figurar como "healthy"
+docker compose ps          # db, api, worker y web deben figurar como "healthy"
 ```
 
 El primer arranque aplica las migraciones, crea el administrador (`ADMIN_EMAIL` / `ADMIN_PASSWORD`
@@ -34,6 +34,7 @@ del `.env`) y entrena el modelo inicial v1 (tarda 1-3 minutos). Después:
 
 | Qué | URL |
 |---|---|
+| **Aplicación web** | **http://127.0.0.1:8080** |
 | Swagger (documentación interactiva) | http://127.0.0.1:8000/docs |
 | Contrato OpenAPI | [docs/openapi.json](docs/openapi.json) |
 | Health | http://127.0.0.1:8000/api/v1/health/ready |
@@ -50,6 +51,15 @@ uv run uvicorn app.main:production_app --factory --reload     # API
 uv run python -m app.worker                                    # worker (otra terminal)
 ```
 
+## Desarrollo del frontend (opcional)
+
+```bash
+cd frontend
+npm ci
+npm run dev            # http://localhost:5173 (usa la API en el puerto 8000)
+npm run gen:api        # regenera los tipos desde docs/openapi.json
+```
+
 ## Calidad
 
 Desde `backend/`:
@@ -61,6 +71,8 @@ uv run mypy                    # tipos (strict)
 uv run pytest                  # unitarios + integración (requiere la db levantada)
 uv run pytest -m "not integration"   # solo unitarios
 ```
+
+Frontend, desde `frontend/`: `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test`, `npm run build`.
 
 El mismo pipeline corre en GitHub Actions en cada PR hacia `dev` y `main` ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
@@ -79,6 +91,11 @@ backend/
   migrations/              # Alembic
   scripts/figures.py       # EDA y gráficas del documento
   tests/ unit/ ml/ integration/ api/ contract/
+frontend/
+  src/api/                 # cliente HTTP centralizado y tipos generados del contrato
+  src/features/            # assessment, metrics, auth, history, datasets, training
+  src/components/          # layout y componentes reutilizables
+  nginx.conf               # sirve la SPA y hace de proxy a la API
 data/raw/                  # dataset semilla
 docs/                      # análisis, base de ingeniería, OpenAPI y figuras
 ```
