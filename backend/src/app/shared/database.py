@@ -3,8 +3,8 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import CheckConstraint, DateTime, MetaData, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import URL, CheckConstraint, DateTime, MetaData, create_engine, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
@@ -23,6 +23,13 @@ class CreatedAtMixin:
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+
+
+def create_session_factory(url: URL | str) -> sessionmaker[Session]:
+    import app.orm  # noqa: F401 - registra todas las tablas antes de usar la sesión
+
+    engine = create_engine(url, pool_pre_ping=True, connect_args={"connect_timeout": 5})
+    return sessionmaker(engine, expire_on_commit=False)
 
 
 def enum_check(column: str, enum: type[StrEnum], name: str) -> CheckConstraint:

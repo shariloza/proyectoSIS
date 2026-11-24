@@ -20,6 +20,8 @@ TEST_SIZE = 0.15
 CV_FOLDS = 5
 # Si dos modelos difieren en menos que esto (ROC-AUC de validación), se elige el más simple.
 SIMPLICITY_TOLERANCE = 0.005
+# Paralelismo acotado: cada proceso copia los datos; el worker tiene un límite de 2 GB.
+N_JOBS = 2
 
 
 @dataclass(frozen=True)
@@ -41,7 +43,7 @@ def default_candidates(seed: int = RANDOM_SEED) -> list[Candidate]:
         ),
         Candidate(
             "RandomForestClassifier",
-            RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=seed),
+            RandomForestClassifier(n_estimators=300, n_jobs=1, random_state=seed),
             {"max_depth": [8, 16], "min_samples_leaf": [5, 20]},
         ),
         Candidate(
@@ -108,7 +110,7 @@ def train(
             {f"model__{key}": values for key, values in candidate.grid.items()},
             scoring="roc_auc",
             cv=cv,
-            n_jobs=-1,
+            n_jobs=N_JOBS,
         )
         search.fit(split.x_train, split.y_train)
         model: Pipeline = search.best_estimator_

@@ -1,5 +1,20 @@
 name: depression-risk
 
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+  image: depression-risk-backend:1.0.0
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    POSTGRES_HOST: db
+    POSTGRES_PORT: "5432"
+    ARTIFACTS_DIR: /app/artifacts
+  volumes:
+    - artifacts:/app/artifacts
+  networks: [internal]
+
 services:
   db:
     image: postgres:16.6-alpine
@@ -21,13 +36,48 @@ services:
       start_period: 10s
     deploy:
       resources:
-        limits:
-          cpus: "1.0"
-          memory: 512M
+        limits: { cpus: "1.0", memory: 512M }
     networks: [internal]
+
+  api:
+    <<: *backend
+    # Migraciones + datos iniciales idempotentes y luego el servidor.
+    command: >
+      sh -c "alembic upgrade head
+      && python -m app.bootstrap --seed-dataset /app/seed/student_depression_dataset.csv
+      && exec uvicorn app.main:production_app --factory --host 0.0.0.0 --port 8000 --proxy-headers"
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/api/v1/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 180s  # el primer arranque entrena el modelo inicial
+    deploy:
+      resources:
+        limits: { cpus: "2.0", memory: 1G }
+
+  worker:
+    <<: *backend
+    command: ["python", "-m", "app.worker"]
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, time, sys; sys.exit(time.time() - os.path.getmtime('/tmp/worker-heartbeat') > 60)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { cpus: "2.0", memory: 2G }
 
 volumes:
   pgdata:
+  artifacts:
 
 networks:
   internal:
