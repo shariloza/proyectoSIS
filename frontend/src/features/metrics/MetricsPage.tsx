@@ -51,7 +51,7 @@ export function ModelMetrics({ model }: { model: ModelDetail }) {
         />
       </div>
 
-      <div className="grid grid-2">
+      <div className="grid grid-3">
         <section className="card">
           <h2>Métricas por clase</h2>
           <ClassMetricsChart metrics={metrics} />
@@ -70,11 +70,12 @@ export function ModelMetrics({ model }: { model: ModelDetail }) {
               .join(" · ")}
           </p>
         </section>
-        <section className="card">
-          <h2>Criterios de aceptación</h2>
-          <AcceptanceTable model={model} />
-        </section>
       </div>
+
+      <section className="card">
+        <h2>Criterios de aceptación</h2>
+        <AcceptanceTable model={model} />
+      </section>
     </div>
   );
 }
@@ -108,9 +109,9 @@ export function AcceptanceTable({ model }: { model: ModelDetail }) {
                 <strong>{c.code}</strong> {c.description}
               </td>
               <td className="num">
-                {c.operator} {c.threshold}
+                {c.operator === ">=" ? "≥" : "≤"} {c.threshold.toLocaleString("es")}
               </td>
-              <td className="num">{c.value}</td>
+              <td className="num">{c.value.toLocaleString("es")}</td>
               <td>
                 <span className={`check ${c.passed ? "check-ok" : "check-fail"}`}>
                   {c.passed ? "✓ Sí" : "✗ No"}

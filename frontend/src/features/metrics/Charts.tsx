@@ -32,8 +32,18 @@ export function ClassMetricsChart({ metrics }: { metrics: EvaluationMetrics }) {
           <YAxis domain={[0, 1]} tick={AXIS} />
           <Tooltip formatter={(value: number) => decimal(value)} />
           <Legend />
-          <Bar dataKey={CLASS_NAMES["0"]} fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey={CLASS_NAMES["1"]} fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey={CLASS_NAMES["0"]}
+            fill="var(--chart-1)"
+            radius={[4, 4, 0, 0]}
+            isAnimationActive={false}
+          />
+          <Bar
+            dataKey={CLASS_NAMES["1"]}
+            fill="var(--chart-2)"
+            radius={[4, 4, 0, 0]}
+            isAnimationActive={false}
+          />
         </BarChart>
       </ResponsiveContainer>
     </figure>
@@ -70,8 +80,16 @@ export function RocChart({ metrics }: { metrics: EvaluationMetrics }) {
             stroke="var(--chart-1)"
             strokeWidth={2}
             dot={false}
+            isAnimationActive={false}
           />
-          <Line dataKey="azar" name="Azar" stroke="var(--ink-muted)" strokeDasharray="5 5" dot={false} />
+          <Line
+            dataKey="azar"
+            name="Azar"
+            stroke="var(--ink-muted)"
+            strokeDasharray="5 5"
+            dot={false}
+            isAnimationActive={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </figure>

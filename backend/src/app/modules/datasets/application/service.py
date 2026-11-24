@@ -28,6 +28,10 @@ class DatasetService:
         self._storage_dir = artifacts_dir / "datasets"
         self._max_bytes = max_bytes
 
+    @property
+    def max_bytes(self) -> int:
+        return self._max_bytes
+
     def upload(
         self,
         filename: str,

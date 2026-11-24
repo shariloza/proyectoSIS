@@ -3,13 +3,14 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { ErrorAlert } from "../../components/Status";
+import { safeInternalPath } from "../../lib/safe-redirect";
 import { useAuth } from "./useAuth";
 
 export function LoginPage() {
   const { isAdmin, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const target = (location.state as { from?: string } | null)?.from ?? "/admin/historial";
+  const target = safeInternalPath((location.state as { from?: unknown } | null)?.from, "/admin/historial");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const attempt = useMutation({
