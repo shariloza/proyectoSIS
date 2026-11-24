@@ -44,7 +44,8 @@ Service = Annotated[DatasetService, Depends(dataset_service)]
 async def upload(
     admin: Admin, service: Service, file: Annotated[UploadFile, File(description="Archivo .csv")]
 ) -> DatasetOut:
-    content = await file.read()
+    # Se lee como máximo el límite + 1 byte: basta para detectar el exceso sin cargarlo entero.
+    content = await file.read(service.max_bytes + 1)
     record = service.upload(file.filename or "", file.content_type, content, admin.id)
     return DatasetOut.of(record)
 

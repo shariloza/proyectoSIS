@@ -499,6 +499,10 @@ th {
 .chart {
   width: 100%;
   height: 280px;
+  margin: 0;
+}
+dd {
+  margin: 0;
 }
 .matrix {
   display: grid;
