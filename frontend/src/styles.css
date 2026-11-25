@@ -177,6 +177,25 @@ a {
   font-size: 0.85rem;
   padding: 1.5rem 1rem 2rem;
 }
+.service-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+.status-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+.status-ok {
+  background: var(--low);
+}
+.status-fail {
+  background: var(--high);
+}
 
 /* Superficies */
 .card {

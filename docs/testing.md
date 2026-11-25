@@ -8,7 +8,7 @@ Todas las cifras de esta página corresponden a ejecuciones reales del 23 al 25/
 | ML | pytest | 25 | dataset real | `uv run pytest tests/machine_learning` |
 | Integración + API | pytest + TestClient | 8 + 32 | **PostgreSQL real** (base temporal por suite) | `uv run pytest tests/integration tests/api` |
 | **Total backend** | | **99** | | `uv run pytest` (≈ 4 min) |
-| Frontend | Vitest + Testing Library | 11 | jsdom | `npm test` |
+| Frontend | Vitest + Testing Library | 13 | jsdom | `npm test` |
 | End-to-end | Playwright (Chromium) | 8 | **sistema completo en Docker** | `npm run e2e` (≈ 2–5 min) |
 
 ## Qué se prueba

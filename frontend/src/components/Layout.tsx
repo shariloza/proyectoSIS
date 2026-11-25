@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 
 import { useAuth } from "../features/auth/useAuth";
+import { ServiceStatus } from "./ServiceStatus";
 
 const PUBLIC_LINKS = [
   { to: "/", label: "Evaluación" },
@@ -52,6 +53,7 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="footer">
+        <ServiceStatus />
         Proyecto académico TALLERSISIA · Estimación estadística, no diagnóstico clínico.
       </footer>
     </>

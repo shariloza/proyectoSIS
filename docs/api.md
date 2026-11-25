@@ -8,22 +8,25 @@
 
 ## Endpoints
 
-| Método | Ruta | Acceso | Respuesta |
-|---|---|---|---|
-| POST | `/predictions` | Público (30/min por IP) | 201 predicción + aviso |
-| GET | `/predictions?page&size&model_version_id` | Admin | Página del historial |
-| GET | `/models/active` | Público | Versión activa con métricas y criterios |
-| GET | `/models` | Admin | Versiones registradas |
-| GET | `/models/{id}` | Admin | Detalle de una versión |
-| POST | `/models/{id}/activate` | Admin | Activa una versión APPROVED/RETIRED |
-| POST | `/models/rollback` | Admin | Vuelve a la versión activa anterior |
-| POST | `/datasets` (multipart `file`) | Admin | 201 dataset validado y versionado |
-| GET | `/datasets` | Admin | Datasets subidos |
-| POST | `/training-jobs` `{dataset_id}` | Admin | 202 trabajo PENDING |
-| GET | `/training-jobs` | Admin | Últimos 20 trabajos |
-| GET | `/training-jobs/{id}` | Admin | Estado, error y modelo resultante |
-| POST | `/auth/login` | Público (5/min por IP) | JWT y su duración |
-| GET | `/health/live` · `/health/ready` | Público | Liveness · BD y modelo activo |
+La interfaz web consume **los 15 endpoints**; la última columna indica en qué pantalla.
+
+| Método | Ruta | Acceso | Respuesta | Pantalla de la interfaz |
+|---|---|---|---|---|
+| POST | `/predictions` | Público (30/min por IP) | 201 predicción + aviso | Evaluación (enviar formulario) |
+| GET | `/predictions?page&size&model_version_id` | Admin | Página del historial | Historial |
+| GET | `/models/active` | Público | Versión activa con métricas y criterios | Métricas del modelo · Re-entrenamiento |
+| GET | `/models` | Admin | Versiones registradas | Métricas del modelo · Re-entrenamiento |
+| GET | `/models/{id}` | Admin | Detalle de una versión | Re-entrenamiento (comparar candidato) |
+| POST | `/models/{id}/activate` | Admin | Activa una versión APPROVED/RETIRED | Re-entrenamiento (Activar) |
+| POST | `/models/rollback` | Admin | Vuelve a la versión activa anterior | Re-entrenamiento (Volver a la versión anterior) |
+| POST | `/datasets` (multipart `file`) | Admin | 201 dataset validado y versionado | Datasets (Subir y validar) |
+| GET | `/datasets` | Admin | Datasets subidos | Datasets · Re-entrenamiento |
+| POST | `/training-jobs` `{dataset_id}` | Admin | 202 trabajo PENDING | Re-entrenamiento (Re-entrenar) |
+| GET | `/training-jobs` | Admin | Últimos 20 trabajos | Re-entrenamiento |
+| GET | `/training-jobs/{id}` | Admin | Estado, error y modelo resultante | Re-entrenamiento (seguimiento en vivo) |
+| POST | `/auth/login` | Público (5/min por IP) | JWT y su duración | Administración (login) |
+| GET | `/health/live` | Público | El proceso responde | Pie de página: "Servicio de IA en línea" |
+| GET | `/health/ready` | Público | Base de datos y modelo activo listos | Pie de página: "base de datos y modelo listos" |
 
 ## Ejemplo: predicción
 
