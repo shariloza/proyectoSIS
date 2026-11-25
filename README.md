@@ -8,30 +8,56 @@ Trabajo final de TALLERSISIA: un modelo de clasificación entrenado con CRISP-ML
 
 | Componente | Estado |
 |---|---|
-| Base de datos (PostgreSQL + Alembic) | ✅ Esquema inicial |
-| Modelo de ML | ⏳ PR 2 |
-| API REST | ⏳ PR 3 |
-| Cliente web | ⏳ PR 4 |
+| Base de datos (PostgreSQL + Alembic) | ✅ |
+| Modelo de ML (CRISP-ML(Q)) | ✅ v1 aprobado: ROC-AUC 0,870 |
+| API REST + worker de re-entrenamiento | ✅ Swagger en `/docs` |
+| Cliente web (React + Vite + TypeScript) | ✅ http://127.0.0.1:8080 |
 
 ## Requisitos
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) con Docker Compose v2
-- [uv](https://docs.astral.sh/uv/) (instala Python 3.12 por su cuenta) para desarrollar el backend
+- [uv](https://docs.astral.sh/uv/) (instala Python 3.12 por su cuenta), solo para desarrollar el backend
 
-## Levantar el proyecto
+## Levantar el proyecto con Docker
 
 ```bash
 # 1. Variables de entorno: copia la plantilla y reemplaza los valores marcados con CAMBIAR
 cp .env.example .env    # PowerShell: Copy-Item .env.example .env
 
-# 2. Base de datos
-docker compose up -d db
-docker compose ps          # db debe figurar como "healthy"
+# 2. Todo el sistema: base de datos, API, worker y cliente web
+docker compose up -d --build
+docker compose ps          # db, api, worker y web deben figurar como "healthy"
+```
 
-# 3. Backend: dependencias y migraciones
+El primer arranque aplica las migraciones, crea el administrador (`ADMIN_EMAIL` / `ADMIN_PASSWORD`
+del `.env`) y entrena el modelo inicial v1 (tarda 1-3 minutos). Después:
+
+| Qué | URL |
+|---|---|
+| **Aplicación web** | **http://127.0.0.1:8080** |
+| Swagger (documentación interactiva) | http://127.0.0.1:8000/docs |
+| Contrato OpenAPI | [docs/openapi.json](docs/openapi.json) |
+| Health | http://127.0.0.1:8000/api/v1/health/ready |
+
+## Desarrollo del backend sin Docker (opcional)
+
+```bash
+docker compose up -d db
 cd backend
 uv sync
 uv run alembic upgrade head
+uv run python -m app.bootstrap --seed-dataset ../data/raw/student_depression_dataset.csv
+uv run uvicorn app.main:production_app --factory --reload     # API
+uv run python -m app.worker                                    # worker (otra terminal)
+```
+
+## Desarrollo del frontend (opcional)
+
+```bash
+cd frontend
+npm ci
+npm run dev            # http://localhost:5173 (usa la API en el puerto 8000)
+npm run gen:api        # regenera los tipos desde docs/openapi.json
 ```
 
 ## Calidad
@@ -46,6 +72,8 @@ uv run pytest                  # unitarios + integración (requiere la db levant
 uv run pytest -m "not integration"   # solo unitarios
 ```
 
+Frontend, desde `frontend/`: `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm test`, `npm run build`.
+
 El mismo pipeline corre en GitHub Actions en cada PR hacia `dev` y `main` ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
 ## Estructura
@@ -53,15 +81,23 @@ El mismo pipeline corre en GitHub Actions en cada PR hacia `dev` y `main` ([.git
 ```text
 backend/
   src/app/
+    main.py | worker.py | bootstrap.py   # puntos de entrada
     config.py              # configuración validada al iniciar (fail fast)
-    shared/database.py     # Base declarativa y convenciones del esquema
-    modules/<módulo>/
-      domain/              # conceptos del dominio (estados, roles)
-      infrastructure/      # persistencia (ORM)
+    api/                   # dependencias HTTP y formato único de errores
+    ml/                    # contrato del dataset, preparación, entrenamiento, evaluación, artefactos
+    modules/<módulo>/      # auth, prediction, model_registry, datasets, training, health
+      domain/ application/ infrastructure/ presentation/
+    shared/                # base de datos, errores, logs, rate limiting
   migrations/              # Alembic
-  tests/ unit/ integration/
+  scripts/figures.py       # EDA y gráficas del documento
+  tests/ unit/ ml/ integration/ api/ contract/
+frontend/
+  src/api/                 # cliente HTTP centralizado y tipos generados del contrato
+  src/features/            # assessment, metrics, auth, history, datasets, training
+  src/components/          # layout y componentes reutilizables
+  nginx.conf               # sirve la SPA y hace de proxy a la API
 data/raw/                  # dataset semilla
-docs/                      # análisis, arquitectura y base de ingeniería
+docs/                      # análisis, base de ingeniería, OpenAPI y figuras
 ```
 
 ## Flujo de trabajo

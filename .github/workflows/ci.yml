@@ -17,7 +17,7 @@ jobs:
   backend:
     name: Backend (lint, tipos, tests)
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: backend
@@ -36,6 +36,7 @@ jobs:
 
     # Valores ficticios exclusivos de CI; los reales viven en .env (fuera del repo).
     env:
+      OPENBLAS_NUM_THREADS: "1"
       ENVIRONMENT: test
       POSTGRES_HOST: 127.0.0.1
       POSTGRES_PORT: "5432"
@@ -77,3 +78,76 @@ jobs:
 
       - name: Tests
         run: uv run pytest
+
+  frontend:
+    name: Frontend (lint, tipos, tests, build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias (lockfile)
+        run: npm ci
+
+      - name: Tipos sincronizados con docs/openapi.json
+        run: |
+          npm run gen:api
+          git diff --exit-code src/api/schema.d.ts
+
+      - name: Lint y formato
+        run: |
+          npm run lint
+          npm run format:check
+
+      - name: Type checking
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: End-to-end (Docker Compose + Playwright)
+    needs: [backend, frontend]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generar .env de prueba (secretos aleatorios, nunca versionados)
+        run: |
+          cp .env.example .env
+          sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 16)/" .env
+          sed -i "s/^JWT_SECRET=.*/JWT_SECRET=$(openssl rand -hex 32)/" .env
+          sed -i "s/^ADMIN_PASSWORD=.*/ADMIN_PASSWORD=$(openssl rand -hex 12)/" .env
+
+      - name: Levantar el sistema completo
+        run: docker compose up -d --build --wait --wait-timeout 600
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Pruebas E2E
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run e2e
+
+      - name: Logs de los servicios si algo falla
+        if: failure()
+        run: docker compose logs --tail 200
