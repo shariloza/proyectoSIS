@@ -104,6 +104,9 @@ async function toApiError(response: Response, hadToken: boolean): Promise<ApiErr
 }
 
 export const api = {
+  live: () => request<Schemas["HealthOut"]>("GET", "/health/live"),
+  ready: () => request<Schemas["HealthOut"]>("GET", "/health/ready"),
+
   login: (email: string, password: string) =>
     request<Schemas["TokenOut"]>("POST", "/auth/login", { json: { email, password } }),
 

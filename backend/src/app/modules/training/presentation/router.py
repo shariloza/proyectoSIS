@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 
 from app.api.dependencies import Admin, training_service
-from app.api.errors import doc
-from app.modules.model_registry.infrastructure.orm import ModelVersionRecord
+from app.api.errors import documented_errors
+from app.modules.model_registry.infrastructure.records import ModelVersionRecord
 from app.modules.model_registry.presentation.router import ModelSummary
 from app.modules.training.application.service import TrainingService
 from app.modules.training.domain.job_status import JobStatus
-from app.modules.training.infrastructure.orm import TrainingJobRecord
+from app.modules.training.infrastructure.records import TrainingJobRecord
 
 router = APIRouter(prefix="/training-jobs", tags=["Re-entrenamiento"])
 
@@ -58,7 +58,7 @@ Service = Annotated[TrainingService, Depends(training_service)]
         "APPROVED o REJECTED y nunca se activa solo. Solo puede haber un trabajo en curso."
     ),
     response_model=TrainingJobOut,
-    responses=doc(401, 403, 404, 409, 422),
+    responses=documented_errors(401, 403, 404, 409, 422),
 )
 def enqueue(body: TrainingJobCreate, admin: Admin, service: Service) -> TrainingJobOut:
     return TrainingJobOut.of(service.enqueue(body.dataset_id, admin.id), None)
@@ -68,7 +68,7 @@ def enqueue(body: TrainingJobCreate, admin: Admin, service: Service) -> Training
     "",
     summary="Trabajos recientes (admin)",
     response_model=list[TrainingJobOut],
-    responses=doc(401, 403),
+    responses=documented_errors(401, 403),
 )
 def recent(_: Admin, service: Service) -> list[TrainingJobOut]:
     return [TrainingJobOut.of(job, model) for job, model in service.recent()]
@@ -78,7 +78,7 @@ def recent(_: Admin, service: Service) -> list[TrainingJobOut]:
     "/{job_id}",
     summary="Estado de un re-entrenamiento (admin)",
     response_model=TrainingJobOut,
-    responses=doc(401, 403, 404),
+    responses=documented_errors(401, 403, 404),
 )
 def get_job(job_id: uuid.UUID, _: Admin, service: Service) -> TrainingJobOut:
     return TrainingJobOut.of(*service.get(job_id))

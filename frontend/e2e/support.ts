@@ -24,7 +24,7 @@ export function adminCredentials(): { email: string; password: string } {
  * CSV con `rows` filas del dataset original, desde un desplazamiento variable para que su hash
  * sea único. `transform` se aplica a cada línea, encabezado incluido.
  */
-export function datasetSample(rows: number, transform: (line: string) => string = (l) => l): Buffer {
+export function datasetSample(rows: number, transform: (line: string) => string = (line) => line): Buffer {
   const lines = readFileSync(resolve(ROOT, "data", "raw", "student_depression_dataset.csv"), "utf-8")
     .trim()
     .split(/\r?\n/);

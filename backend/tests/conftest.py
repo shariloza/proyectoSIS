@@ -24,8 +24,8 @@ def create_database() -> Iterator[CreateDatabase]:
 
     def create() -> Engine:
         name = f"test_{uuid.uuid4().hex[:12]}"
-        with admin.connect() as conn:
-            conn.execute(text(f'CREATE DATABASE "{name}"'))
+        with admin.connect() as connection:
+            connection.execute(text(f'CREATE DATABASE "{name}"'))
         engine = create_engine(base_url.set(database=name))
         created.append((name, engine))
         return engine
@@ -34,8 +34,8 @@ def create_database() -> Iterator[CreateDatabase]:
 
     for name, engine in created:
         engine.dispose()
-        with admin.connect() as conn:
-            conn.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
+        with admin.connect() as connection:
+            connection.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
     admin.dispose()
 
 

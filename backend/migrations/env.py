@@ -10,7 +10,7 @@ from alembic import context
 from sqlalchemy import Connection, create_engine
 
 from app.config import get_settings
-from app.orm import Base
+from app.records import Base
 
 config = context.config
 if config.config_file_name is not None and not config.attributes.get("connection"):

@@ -45,12 +45,13 @@ test.describe.serial("administración", () => {
     const before = await activeVersion(page);
 
     await upload(page, "actualizado.csv", datasetSample(12000));
-    await expect(page.getByRole("status")).toContainText("Archivo aceptado");
+    await expect(page.getByRole("main").getByRole("status")).toContainText("Archivo aceptado");
     await capture(page, "06-dataset-aceptado");
 
     await page.getByRole("link", { name: "Usarlo para re-entrenar →" }).click();
     const enqueued = page.waitForResponse(
-      (r) => r.url().endsWith("/api/v1/training-jobs") && r.request().method() === "POST",
+      (response) =>
+        response.url().endsWith("/api/v1/training-jobs") && response.request().method() === "POST",
     );
     await page.getByRole("button", { name: "Re-entrenar" }).click();
     expect((await enqueued).status()).toBe(202);

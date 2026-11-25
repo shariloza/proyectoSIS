@@ -40,7 +40,7 @@ export function LoginPage() {
             autoComplete="username"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
         <div className="field">
@@ -51,11 +51,11 @@ export function LoginPage() {
             autoComplete="current-password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
           />
         </div>
         <ErrorAlert error={attempt.error} />
-        <button className="btn btn-primary" type="submit" disabled={attempt.isPending}>
+        <button className="button button-primary" type="submit" disabled={attempt.isPending}>
           {attempt.isPending ? "Ingresando…" : "Ingresar"}
         </button>
       </form>

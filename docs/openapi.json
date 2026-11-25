@@ -1486,11 +1486,11 @@
             "title": "Age",
             "description": "Edad en años"
           },
-          "cgpa": {
+          "grade_point_average": {
             "type": "number",
             "maximum": 10.0,
             "minimum": 0.01,
-            "title": "Cgpa",
+            "title": "Grade Point Average",
             "description": "Promedio académico (escala 0-10)"
           },
           "academic_pressure": {
@@ -1569,7 +1569,7 @@
         "required": [
           "gender",
           "age",
-          "cgpa",
+          "grade_point_average",
           "academic_pressure",
           "study_satisfaction",
           "work_study_hours",
@@ -1585,12 +1585,12 @@
           {
             "academic_pressure": 4,
             "age": 21,
-            "cgpa": 7.5,
             "dietary_habits": "Moderate",
             "education_level": "undergraduate",
             "family_history": "No",
             "financial_stress": 4,
             "gender": "Female",
+            "grade_point_average": 7.5,
             "sleep_duration": "5-6 hours",
             "study_satisfaction": 2,
             "work_study_hours": 9

@@ -106,5 +106,13 @@ docs/                      # análisis, base de ingeniería, OpenAPI y figuras
 
 ## Documentación
 
-- [Análisis y arquitectura](docs/analisis-arquitectura.md)
-- [Base de ingeniería](docs/base-ingenieria.md)
+| Documento | Contenido |
+|---|---|
+| [Análisis y arquitectura (Fase 1)](docs/analisis-arquitectura.md) | Requisitos, decisiones y cronograma |
+| [Arquitectura](docs/arquitectura.md) | Componentes y flujos del sistema real |
+| [Base de datos](docs/base-de-datos.md) | ERD, restricciones y [script SQL](docs/sql/schema.sql) |
+| [API](docs/api.md) | Endpoints, ejemplos, errores y [Swagger](docs/openapi.json) |
+| [Ciclo de vida del ML](docs/ml-lifecycle.md) · [Model card](docs/model-card.md) · [Datasets](docs/datasets.md) | Entrenamiento, métricas reales y datos |
+| [Seguridad](docs/seguridad.md) · [Despliegue](docs/despliegue.md) · [Testing](docs/testing.md) | Operación y calidad |
+| [Guion del video](docs/guion-video.md) · [Entregables](docs/entregables.md) | Cierre de la materia |
+| [Base de ingeniería](docs/base-ingenieria.md) | Estándar seguido |

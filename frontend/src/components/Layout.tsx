@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 
 import { useAuth } from "../features/auth/useAuth";
+import { ServiceStatus } from "./ServiceStatus";
 
 const PUBLIC_LINKS = [
   { to: "/", label: "Evaluación" },
@@ -38,11 +39,11 @@ export function Layout() {
             ))}
           </nav>
           {isAdmin ? (
-            <button className="btn btn-secondary" onClick={logout}>
+            <button className="button button-secondary" onClick={logout}>
               Cerrar sesión
             </button>
           ) : (
-            <NavLink to="/login" className="btn btn-secondary">
+            <NavLink to="/login" className="button button-secondary">
               Administración
             </NavLink>
           )}
@@ -52,6 +53,7 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="footer">
+        <ServiceStatus />
         Proyecto académico TALLERSISIA · Estimación estadística, no diagnóstico clínico.
       </footer>
     </>

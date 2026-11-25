@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from app.ml.dataset import DatasetValidationError, prepare
-from app.ml.schema import FEATURE_COLUMNS
+from app.machine_learning.dataset import DatasetValidationError, prepare
+from app.machine_learning.schema import FEATURE_COLUMNS
 
 SUICIDAL = "Have you ever had suicidal thoughts ?"
 
@@ -32,7 +32,7 @@ def test_out_of_domain_rows_are_dropped_and_reported(raw: pd.DataFrame) -> None:
 
     assert report.raw_rows - report.kept_rows >= 3
     assert report.dropped_by_reason["sleep_duration con categoría no permitida"] >= 1
-    assert report.dropped_by_reason["cgpa fuera de [0.01, 10]"] >= 1
+    assert report.dropped_by_reason["grade_point_average fuera de [0.01, 10]"] >= 1
 
 
 def test_degree_is_grouped_into_education_level(raw: pd.DataFrame) -> None:

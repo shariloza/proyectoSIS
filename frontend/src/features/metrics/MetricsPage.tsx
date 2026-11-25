@@ -97,24 +97,24 @@ export function AcceptanceTable({ model }: { model: ModelDetail }) {
         <thead>
           <tr>
             <th>Criterio</th>
-            <th className="num">Umbral</th>
-            <th className="num">Obtenido</th>
+            <th className="numeric">Umbral</th>
+            <th className="numeric">Obtenido</th>
             <th>Cumple</th>
           </tr>
         </thead>
         <tbody>
-          {criteria(model).map((c) => (
-            <tr key={c.code}>
+          {criteria(model).map((criterion) => (
+            <tr key={criterion.code}>
               <td>
-                <strong>{c.code}</strong> {c.description}
+                <strong>{criterion.code}</strong> {criterion.description}
               </td>
-              <td className="num">
-                {c.operator === ">=" ? "≥" : "≤"} {c.threshold.toLocaleString("es")}
+              <td className="numeric">
+                {criterion.operator === ">=" ? "≥" : "≤"} {criterion.threshold.toLocaleString("es")}
               </td>
-              <td className="num">{c.value.toLocaleString("es")}</td>
+              <td className="numeric">{criterion.value.toLocaleString("es")}</td>
               <td>
-                <span className={`check ${c.passed ? "check-ok" : "check-fail"}`}>
-                  {c.passed ? "✓ Sí" : "✗ No"}
+                <span className={`check ${criterion.passed ? "check-ok" : "check-fail"}`}>
+                  {criterion.passed ? "✓ Sí" : "✗ No"}
                 </span>
               </td>
             </tr>
@@ -140,22 +140,22 @@ function VersionsTable() {
                 <th>Versión</th>
                 <th>Algoritmo</th>
                 <th>Estado</th>
-                <th className="num">ROC-AUC</th>
-                <th className="num">F1 macro</th>
+                <th className="numeric">ROC-AUC</th>
+                <th className="numeric">F1 macro</th>
                 <th>Entrenado</th>
               </tr>
             </thead>
             <tbody>
-              {models.data.map((m) => (
-                <tr key={m.id}>
-                  <td>{m.version}</td>
-                  <td>{m.algorithm}</td>
+              {models.data.map((modelVersion) => (
+                <tr key={modelVersion.id}>
+                  <td>{modelVersion.version}</td>
+                  <td>{modelVersion.algorithm}</td>
                   <td>
-                    <StatusBadge status={m.status} />
+                    <StatusBadge status={modelVersion.status} />
                   </td>
-                  <td className="num">{decimal(m.roc_auc)}</td>
-                  <td className="num">{decimal(m.f1_macro)}</td>
-                  <td>{dateTime(m.trained_at)}</td>
+                  <td className="numeric">{decimal(modelVersion.roc_auc)}</td>
+                  <td className="numeric">{decimal(modelVersion.f1_macro)}</td>
+                  <td>{dateTime(modelVersion.trained_at)}</td>
                 </tr>
               ))}
             </tbody>

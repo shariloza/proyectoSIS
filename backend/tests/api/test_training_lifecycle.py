@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import update
 
 from app.api.dependencies import AppState
-from app.modules.model_registry.infrastructure.orm import ModelVersionRecord
+from app.modules.model_registry.infrastructure.records import ModelVersionRecord
 from app.modules.training.application.worker import TrainingWorker
 from tests.api.conftest import VALID_PROFILE
 from tests.api.test_datasets import sample_csv_bytes, upload
@@ -18,7 +18,7 @@ JOBS = "/api/v1/training-jobs"
 
 
 def worker(state: AppState, timeout_seconds: int = 300) -> TrainingWorker:
-    return TrainingWorker(state.sessions, state.settings.artifacts_dir, timeout_seconds)
+    return TrainingWorker(state.sessions, state.settings.artifacts_directory, timeout_seconds)
 
 
 def new_dataset(client: TestClient, headers: dict[str, str], seed: int) -> str:
@@ -110,7 +110,9 @@ def test_failed_training_keeps_active_model(
     datasets = client.get("/api/v1/datasets", headers=admin_headers).json()
     stored = next(d for d in datasets if d["id"] == dataset_id)
     # Se corrompe el archivo en disco después de aceptado: el entrenamiento debe fallar.
-    (state.settings.artifacts_dir / "datasets" / f"{stored['sha256']}.csv").write_text("x\n1\n")
+    (state.settings.artifacts_directory / "datasets" / f"{stored['sha256']}.csv").write_text(
+        "x\n1\n"
+    )
     job_id = client.post(JOBS, json={"dataset_id": dataset_id}, headers=admin_headers).json()["id"]
 
     worker(state).run_once()

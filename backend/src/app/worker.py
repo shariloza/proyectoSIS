@@ -28,7 +28,7 @@ def main() -> None:
 
     worker = TrainingWorker(
         create_session_factory(settings.database_url),
-        settings.artifacts_dir,
+        settings.artifacts_directory,
         settings.training_timeout_seconds,
     )
     worker.run_forever(POLL_SECONDS, stop.is_set, HEARTBEAT_FILE)

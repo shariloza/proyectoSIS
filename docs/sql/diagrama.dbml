@@ -1,0 +1,91 @@
+// Diagrama entidad-relación de la base de datos (formato DBML).
+// Para verlo: copiar este archivo en https://dbdiagram.io y exportarlo como PNG o PDF.
+
+Table admin_users [headercolor: #3D1E6D] {
+  id uuid [pk, default: `gen_random_uuid()`]
+  email varchar(254) [unique, not null]
+  password_hash varchar(255) [not null, note: 'Argon2']
+  role varchar(20) [not null, note: 'admin']
+  is_active boolean [not null, default: true]
+  created_at timestamptz [not null, default: `now()`]
+  Note: 'Administradores del sistema'
+}
+
+Table datasets [headercolor: #6A3FB5] {
+  id uuid [pk, default: `gen_random_uuid()`]
+  original_filename varchar(255) [not null]
+  storage_path varchar(512) [unique, not null]
+  sha256 varchar(64) [unique, not null]
+  row_count integer [not null, note: '> 0']
+  size_bytes bigint [not null, note: '> 0']
+  validation_report jsonb [not null]
+  uploaded_by uuid [note: 'NULL = dataset inicial']
+  created_at timestamptz [not null, default: `now()`]
+  Note: 'Archivos de entrenamiento subidos'
+}
+
+Table training_jobs [headercolor: #9A6FD6] {
+  id uuid [pk, default: `gen_random_uuid()`]
+  dataset_id uuid [not null]
+  requested_by uuid [not null]
+  status varchar(20) [not null, default: 'PENDING', note: 'PENDING | RUNNING | SUCCEEDED | FAILED | TIMED_OUT']
+  attempts smallint [not null, default: 0, note: '0 a 3']
+  error_message text
+  created_at timestamptz [not null, default: `now()`]
+  started_at timestamptz
+  heartbeat_at timestamptz
+  finished_at timestamptz
+  Note: 'Re-entrenamientos procesados por el worker. Solo uno puede estar en RUNNING.'
+}
+
+Table model_versions [headercolor: #4B2A8A] {
+  id uuid [pk, default: `gen_random_uuid()`]
+  version varchar(20) [unique, not null, note: 'v1, v2...']
+  dataset_id uuid [not null]
+  training_job_id uuid [unique, note: 'NULL = modelo inicial']
+  algorithm varchar(100) [not null]
+  hyperparameters jsonb [not null]
+  metrics jsonb [not null]
+  acceptance_report jsonb [not null]
+  dependencies jsonb [not null]
+  preprocessing_version varchar(20) [not null]
+  random_seed integer [not null]
+  artifact_path varchar(512) [unique, not null]
+  artifact_sha256 varchar(64) [not null]
+  status varchar(20) [not null, note: 'CANDIDATE | APPROVED | REJECTED | ACTIVE | RETIRED']
+  trained_at timestamptz [not null]
+  activated_at timestamptz
+  Note: 'Versiones inmutables del modelo de IA. Solo una puede estar en ACTIVE.'
+}
+
+Table model_activation_events [headercolor: #8E44AD] {
+  id bigserial [pk]
+  model_version_id uuid [not null]
+  previous_model_version_id uuid
+  performed_by uuid [not null]
+  action varchar(20) [not null, note: 'ACTIVATE | ROLLBACK']
+  created_at timestamptz [not null, default: `now()`]
+  Note: 'Historial de activaciones y rollbacks'
+}
+
+Table predictions [headercolor: #B07CD8] {
+  id uuid [pk, default: `gen_random_uuid()`]
+  model_version_id uuid [not null]
+  input_features jsonb [not null, note: 'Sin datos identificables']
+  predicted_class smallint [not null, note: '0 o 1']
+  probability numeric(5,4) [not null, note: '0 a 1']
+  risk_band varchar(10) [not null, note: 'LOW | MODERATE | HIGH']
+  latency_milliseconds integer [not null, note: '>= 0']
+  created_at timestamptz [not null, default: `now()`]
+  Note: 'Historial de predicciones'
+}
+
+Ref: datasets.uploaded_by > admin_users.id
+Ref: training_jobs.requested_by > admin_users.id
+Ref: model_activation_events.performed_by > admin_users.id
+Ref: training_jobs.dataset_id > datasets.id
+Ref: model_versions.dataset_id > datasets.id
+Ref: model_versions.training_job_id - training_jobs.id
+Ref: model_activation_events.model_version_id > model_versions.id
+Ref: model_activation_events.previous_model_version_id > model_versions.id
+Ref: predictions.model_version_id > model_versions.id

@@ -22,7 +22,7 @@ describe("api client", () => {
       },
     });
 
-    const error = await api.activeModel().catch((e: unknown) => e);
+    const error = await api.activeModel().catch((rejection: unknown) => rejection);
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({

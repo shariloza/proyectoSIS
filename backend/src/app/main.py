@@ -24,7 +24,7 @@ from app.modules.model_registry.presentation.router import router as models_rout
 from app.modules.prediction.presentation.router import router as predictions_router
 from app.modules.training.presentation.router import router as training_router
 from app.shared.database import create_session_factory
-from app.shared.logging import configure_logging, request_id_var
+from app.shared.logging import configure_logging, request_id_context
 from app.shared.rate_limit import RateLimiter
 
 API_PREFIX = "/api/v1"
@@ -56,7 +56,7 @@ def build_state(settings: Settings) -> AppState:
             settings.jwt_audience,
             settings.jwt_expire_minutes,
         ),
-        models=ActiveModelProvider(settings.artifacts_dir),
+        models=ActiveModelProvider(settings.artifacts_directory),
         prediction_limiter=RateLimiter(max_requests=30, window_seconds=60),
         login_limiter=RateLimiter(max_requests=5, window_seconds=60),
     )
@@ -87,12 +87,12 @@ def create_app(state: AppState) -> FastAPI:
     ) -> Response:
         incoming = request.headers.get("X-Request-ID", "")
         request_id = incoming if REQUEST_ID_PATTERN.match(incoming) else uuid.uuid4().hex
-        token = request_id_var.set(request_id)
+        token = request_id_context.set(request_id)
         start = time.perf_counter()
         try:
             response = await call_next(request)
         finally:
-            request_id_var.reset(token)
+            request_id_context.reset(token)
         response.headers["X-Request-ID"] = request_id
         logger.info(
             "request",
@@ -101,7 +101,7 @@ def create_app(state: AppState) -> FastAPI:
                 "method": request.method,
                 "path": request.url.path,
                 "status": response.status_code,
-                "duration_ms": round((time.perf_counter() - start) * 1000, 1),
+                "duration_milliseconds": round((time.perf_counter() - start) * 1000, 1),
             },
         )
         return response

@@ -506,10 +506,10 @@ export interface components {
              */
             age: number;
             /**
-             * Cgpa
+             * Grade Point Average
              * @description Promedio académico (escala 0-10)
              */
-            cgpa: number;
+            grade_point_average: number;
             /**
              * Academic Pressure
              * @description Presión académica percibida (1-5)
