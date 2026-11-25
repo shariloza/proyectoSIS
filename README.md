@@ -108,7 +108,6 @@ docs/                      # análisis, base de ingeniería, OpenAPI y figuras
 
 | Documento | Contenido |
 |---|---|
-| [Documento final](docs/documento-final.md) | **Entregable principal:** CRISP-ML(Q) fase por fase, servicio y cliente web |
 | [Análisis y arquitectura (Fase 1)](docs/analisis-arquitectura.md) | Requisitos, decisiones y cronograma |
 | [Arquitectura](docs/arquitectura.md) | Componentes y flujos del sistema real |
 | [Base de datos](docs/base-de-datos.md) | ERD, restricciones y [script SQL](docs/sql/schema.sql) |

@@ -33,7 +33,7 @@ La depresión en estudiantes universitarios es frecuente y suele detectarse tard
 | Diagrama de BD y script | Mermaid (sección 9) + SQL offline de Alembic en `docs/sql/` |
 | Documento Swagger | OpenAPI generado por FastAPI y exportado a `docs/openapi.json` |
 | Video de 5 minutos | Guion en `docs/guion-video.md` (Fase 7) |
-| Documento CRISP-ML(Q) y desarrollo | `docs/documento-final.md` |
+| Documento CRISP-ML(Q) y desarrollo | Documento final en Word (entregado aparte) |
 | Repositorio GitHub público y PR revisados por IA | Flujo `feature/*` → `dev` → `main`, 6 PR + 1 final |
 
 ### 1.4 Usuarios
