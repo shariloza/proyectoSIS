@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| Versión | v1 (activo) · entrenado el 23/11/2026 |
+| Versión | v1 (activo) · entrenado el 25/11/2026 |
 | Algoritmo | Regresión logística (`C = 0.1`, `max_iter = 2000`) dentro de un Pipeline de scikit-learn 1.7.2 |
 | Entrada | 11 variables: género, edad, promedio, presión académica, satisfacción con los estudios, horas de estudio/trabajo, estrés financiero, sueño, alimentación, nivel educativo y antecedentes familiares |
 | Salida | Probabilidad de la clase "depresión" (0–1), clase con umbral 0,5 y banda de riesgo (< 0,40 bajo · < 0,70 moderado · resto alto) |
-| Artefacto | `models/v1/model.joblib`, SHA-256 `518bf27e9ca3b548…` |
+| Artefacto | `models/v1/model.joblib`, SHA-256 `8204df62b1478534…` |
 
 ## Uso previsto
 
@@ -43,7 +43,7 @@ simple, interpretable, rápida y liviana (un artefacto de 7 KB).
 | Clase 0 (sin depresión): precisión / recall / F1 | 0,774 / 0,720 / 0,746 |
 | Matriz de confusión [[VN, FP], [FN, VP]] | [[1247, 485], [364, 2083]] |
 | Recall por género | hombres 0,849 · mujeres 0,854 (brecha 0,005) |
-| Latencia p95 por predicción | 38,9 ms (en el contenedor) |
+| Latencia (percentil 95) por predicción | 22,6 ms (en el contenedor) |
 
 Cumple los 8 criterios de aceptación (C1–C8).
 

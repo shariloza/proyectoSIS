@@ -54,10 +54,11 @@ export function TrainingPage() {
         {datasets.data && (
           <div className="field">
             <label htmlFor="dataset">Dataset</label>
-            <select id="dataset" value={datasetId} onChange={(e) => setDatasetId(e.target.value)}>
-              {datasets.data.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.original_filename} · {d.row_count.toLocaleString("es")} filas · {dateTime(d.created_at)}
+            <select id="dataset" value={datasetId} onChange={(event) => setDatasetId(event.target.value)}>
+              {datasets.data.map((dataset) => (
+                <option key={dataset.id} value={dataset.id}>
+                  {dataset.original_filename} · {dataset.row_count.toLocaleString("es")} filas ·{" "}
+                  {dateTime(dataset.created_at)}
                 </option>
               ))}
             </select>
@@ -65,7 +66,7 @@ export function TrainingPage() {
         )}
         <ErrorAlert error={enqueue.error} />
         <button
-          className="btn btn-primary"
+          className="button button-primary"
           type="submit"
           disabled={enqueue.isPending || !datasets.data?.length}
         >
@@ -142,18 +143,18 @@ function CandidateComparison({ candidateId, onChanged }: { candidateId: string; 
           <thead>
             <tr>
               <th>Métrica (test)</th>
-              <th className="num">Activo {active.data.version}</th>
-              <th className="num">Candidato {candidate.data.version}</th>
-              <th className="num">Diferencia</th>
+              <th className="numeric">Activo {active.data.version}</th>
+              <th className="numeric">Candidato {candidate.data.version}</th>
+              <th className="numeric">Diferencia</th>
             </tr>
           </thead>
           <tbody>
             {comparisonRows(active.data, candidate.data).map((row) => (
               <tr key={row.label}>
                 <td>{row.label}</td>
-                <td className="num">{decimal(row.active)}</td>
-                <td className="num">{decimal(row.candidate)}</td>
-                <td className={`num check ${row.candidate >= row.active ? "check-ok" : "check-fail"}`}>
+                <td className="numeric">{decimal(row.active)}</td>
+                <td className="numeric">{decimal(row.candidate)}</td>
+                <td className={`numeric check ${row.candidate >= row.active ? "check-ok" : "check-fail"}`}>
                   {row.candidate >= row.active ? "+" : ""}
                   {decimal(row.candidate - row.active)}
                 </td>
@@ -174,7 +175,7 @@ function CandidateComparison({ candidateId, onChanged }: { candidateId: string; 
       )}
       {!isActive && (
         <button
-          className="btn btn-primary"
+          className="button button-primary"
           disabled={!ACTIVATABLE.has(candidate.data.status) || activate.isPending}
           onClick={() => {
             if (
@@ -223,7 +224,7 @@ function Versions({ onChanged }: { onChanged: () => void }) {
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h2>Versiones y rollback</h2>
         <button
-          className="btn btn-secondary"
+          className="button button-secondary"
           disabled={rollback.isPending}
           onClick={() => window.confirm("¿Volver a la versión activa anterior?") && rollback.mutate()}
         >
@@ -245,28 +246,31 @@ function Versions({ onChanged }: { onChanged: () => void }) {
               <tr>
                 <th>Versión</th>
                 <th>Estado</th>
-                <th className="num">ROC-AUC</th>
+                <th className="numeric">ROC-AUC</th>
                 <th>Entrenado</th>
                 <th>Acción</th>
               </tr>
             </thead>
             <tbody>
-              {models.data.map((m) => (
-                <tr key={m.id}>
+              {models.data.map((modelVersion) => (
+                <tr key={modelVersion.id}>
                   <td>
-                    {m.version} <span className="small muted">{m.algorithm}</span>
+                    {modelVersion.version} <span className="small muted">{modelVersion.algorithm}</span>
                   </td>
                   <td>
-                    <StatusBadge status={m.status} />
+                    <StatusBadge status={modelVersion.status} />
                   </td>
-                  <td className="num">{decimal(m.roc_auc)}</td>
-                  <td>{dateTime(m.trained_at)}</td>
+                  <td className="numeric">{decimal(modelVersion.roc_auc)}</td>
+                  <td>{dateTime(modelVersion.trained_at)}</td>
                   <td>
-                    {ACTIVATABLE.has(m.status) && (
+                    {ACTIVATABLE.has(modelVersion.status) && (
                       <button
-                        className="btn btn-secondary"
+                        className="button button-secondary"
                         disabled={activate.isPending}
-                        onClick={() => window.confirm(`¿Activar ${m.version}?`) && activate.mutate(m.id)}
+                        onClick={() =>
+                          window.confirm(`¿Activar ${modelVersion.version}?`) &&
+                          activate.mutate(modelVersion.id)
+                        }
                       >
                         Activar
                       </button>

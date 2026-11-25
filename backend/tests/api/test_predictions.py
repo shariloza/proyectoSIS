@@ -33,7 +33,7 @@ def test_prediction_uses_active_model_and_is_stored(
     [
         ("age", 17),
         ("academic_pressure", 6),
-        ("cgpa", 10.5),
+        ("grade_point_average", 10.5),
         ("sleep_duration", "Others"),
         ("gender", "Unknown"),
     ],

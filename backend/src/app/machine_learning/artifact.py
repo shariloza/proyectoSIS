@@ -11,9 +11,9 @@ from typing import Any
 import joblib
 from sklearn.pipeline import Pipeline
 
-from app.ml.dataset import PreparationReport, file_sha256
-from app.ml.schema import FEATURE_COLUMNS, PREPROCESSING_VERSION
-from app.ml.training import RANDOM_SEED, TrainingResult
+from app.machine_learning.dataset import PreparationReport, file_sha256
+from app.machine_learning.schema import FEATURE_COLUMNS, PREPROCESSING_VERSION
+from app.machine_learning.training import RANDOM_SEED, TrainingResult
 
 MODEL_FILE = "model.joblib"
 METADATA_FILE = "metadata.json"
@@ -26,24 +26,26 @@ class ArtifactError(RuntimeError):
 
 
 def runtime_dependencies() -> dict[str, str]:
-    return {"python": platform.python_version()} | {lib: version(lib) for lib in PINNED_LIBRARIES}
+    return {"python": platform.python_version()} | {
+        library: version(library) for library in PINNED_LIBRARIES
+    }
 
 
 def save_model(
     result: TrainingResult,
     *,
-    models_dir: Path,
+    models_directory: Path,
     version_name: str,
     dataset_path: Path,
     preparation: PreparationReport,
 ) -> dict[str, Any]:
-    """Guarda el modelo en `<models_dir>/<version>/`. Nunca sobrescribe una versión."""
-    target_dir = models_dir / version_name
-    if target_dir.exists():
+    """Guarda el modelo en `<models_directory>/<version>/`. Nunca sobrescribe una versión."""
+    version_directory = models_directory / version_name
+    if version_directory.exists():
         raise ArtifactError(f"la versión {version_name} ya existe; las versiones son inmutables")
-    target_dir.mkdir(parents=True)
+    version_directory.mkdir(parents=True)
 
-    model_path = target_dir / MODEL_FILE
+    model_path = version_directory / MODEL_FILE
     joblib.dump(result.model, model_path)
     metadata = {
         "version": version_name,
@@ -66,7 +68,7 @@ def save_model(
         "dependencies": runtime_dependencies(),
         "artifact": {"file": MODEL_FILE, "sha256": file_sha256(model_path)},
     }
-    (target_dir / METADATA_FILE).write_text(
+    (version_directory / METADATA_FILE).write_text(
         json.dumps(metadata, indent=2, ensure_ascii=False), encoding="utf-8"
     )
     return metadata
@@ -81,9 +83,9 @@ def load_model(model_path: Path, expected_sha256: str, dependencies: dict[str, s
 
     current = runtime_dependencies()
     mismatched = [
-        f"{lib} {dependencies.get(lib)} != {current[lib]}"
-        for lib in PINNED_LIBRARIES
-        if dependencies.get(lib) != current[lib]
+        f"{library} {dependencies.get(library)} != {current[library]}"
+        for library in PINNED_LIBRARIES
+        if dependencies.get(library) != current[library]
     ]
     if mismatched:
         raise ArtifactError("artefacto incompatible con el entorno: " + ", ".join(mismatched))

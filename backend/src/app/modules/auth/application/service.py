@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.auth.domain.role import Principal, Role
-from app.modules.auth.infrastructure.orm import AdminUserRecord
+from app.modules.auth.infrastructure.records import AdminUserRecord
 from app.modules.auth.infrastructure.security import InvalidTokenError, PasswordHasher, TokenService
 from app.shared.errors import UnauthorizedError
 

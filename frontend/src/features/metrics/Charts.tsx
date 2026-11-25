@@ -51,10 +51,10 @@ export function ClassMetricsChart({ metrics }: { metrics: EvaluationMetrics }) {
 }
 
 export function RocChart({ metrics }: { metrics: EvaluationMetrics }) {
-  const data = metrics.roc_curve.fpr.map((fpr, index) => ({
-    fpr,
-    modelo: metrics.roc_curve.tpr[index],
-    azar: fpr,
+  const data = metrics.roc_curve.false_positive_rate.map((falsePositiveRate, index) => ({
+    falsosPositivos: falsePositiveRate,
+    modelo: metrics.roc_curve.true_positive_rate[index],
+    azar: falsePositiveRate,
   }));
   return (
     <figure className="chart" aria-label={`Curva ROC, área bajo la curva ${decimal(metrics.roc_auc)}`}>
@@ -62,7 +62,7 @@ export function RocChart({ metrics }: { metrics: EvaluationMetrics }) {
         <LineChart data={data}>
           <CartesianGrid stroke="var(--border)" />
           <XAxis
-            dataKey="fpr"
+            dataKey="falsosPositivos"
             type="number"
             domain={[0, 1]}
             tick={AXIS}
@@ -71,7 +71,9 @@ export function RocChart({ metrics }: { metrics: EvaluationMetrics }) {
           <YAxis domain={[0, 1]} tick={AXIS} />
           <Tooltip
             formatter={(value: number) => decimal(value)}
-            labelFormatter={(fpr: number) => `FPR ${decimal(fpr)}`}
+            labelFormatter={(falsePositiveRate: number) =>
+              `Tasa de falsos positivos ${decimal(falsePositiveRate)}`
+            }
           />
           <Legend verticalAlign="top" />
           <Line

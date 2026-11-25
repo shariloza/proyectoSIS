@@ -26,7 +26,7 @@ class CreatedAtMixin:
 
 
 def create_session_factory(url: URL | str) -> sessionmaker[Session]:
-    import app.orm  # noqa: F401 - registra todas las tablas antes de usar la sesión
+    import app.records  # noqa: F401 - registra todas las tablas antes de usar la sesión
 
     engine = create_engine(url, pool_pre_ping=True, connect_args={"connect_timeout": 5})
     return sessionmaker(engine, expire_on_commit=False)

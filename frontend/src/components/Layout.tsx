@@ -38,11 +38,11 @@ export function Layout() {
             ))}
           </nav>
           {isAdmin ? (
-            <button className="btn btn-secondary" onClick={logout}>
+            <button className="button button-secondary" onClick={logout}>
               Cerrar sesión
             </button>
           ) : (
-            <NavLink to="/login" className="btn btn-secondary">
+            <NavLink to="/login" className="button button-secondary">
               Administración
             </NavLink>
           )}

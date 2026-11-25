@@ -58,7 +58,7 @@ export const SCALES = [
 export const INITIAL_PROFILE: StudentProfile = {
   gender: "Female",
   age: 21,
-  cgpa: 7.5,
+  grade_point_average: 7.5,
   academic_pressure: 3,
   study_satisfaction: 3,
   work_study_hours: 6,

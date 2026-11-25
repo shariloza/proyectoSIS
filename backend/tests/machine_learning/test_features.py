@@ -1,7 +1,7 @@
 import numpy as np
 
-from app.ml.dataset import PreparedDataset
-from app.ml.features import build_preprocessor
+from app.machine_learning.dataset import PreparedDataset
+from app.machine_learning.features import build_preprocessor
 
 
 def test_output_has_no_missing_values_even_with_nulls(prepared: PreparedDataset) -> None:
@@ -18,7 +18,13 @@ def test_produces_the_expected_feature_set(prepared: PreparedDataset) -> None:
 
     names = set(preprocessor.get_feature_names_out())
 
-    assert {"age", "cgpa", "sleep_duration", "gender_Female", "family_history_Yes"} <= names
+    assert {
+        "age",
+        "grade_point_average",
+        "sleep_duration",
+        "gender_Female",
+        "family_history_Yes",
+    } <= names
     assert {f"education_level_{level}" for level in ("secondary", "doctorate")} <= names
     assert not any("suicid" in name.lower() for name in names)
 

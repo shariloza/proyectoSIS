@@ -54,8 +54,8 @@ def auth_service(state: State, session: DbSession) -> AuthService:
 
 
 def dataset_service(state: State, session: DbSession) -> DatasetService:
-    max_bytes = state.settings.max_upload_mb * 1024 * 1024
-    return DatasetService(session, state.settings.artifacts_dir, max_bytes)
+    max_bytes = state.settings.max_upload_megabytes * 1024 * 1024
+    return DatasetService(session, state.settings.artifacts_directory, max_bytes)
 
 
 def registry_service(session: DbSession) -> ModelRegistryService:

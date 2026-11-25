@@ -1,7 +1,7 @@
 import type { ModelDetail } from "../../api/client";
 
 /**
- * Forma de `metrics` y `acceptance` que produce backend/src/app/ml/evaluation.py.
+ * Forma de `metrics` y `acceptance` que produce backend/src/app/machine_learning/evaluation.py.
  * En el contrato OpenAPI son objetos libres; aquí se tipan para la visualización.
  */
 export interface ClassMetrics {
@@ -17,7 +17,7 @@ export interface EvaluationMetrics {
   accuracy: number;
   per_class: Record<"0" | "1", ClassMetrics>;
   confusion_matrix: [[number, number], [number, number]];
-  roc_curve: { fpr: number[]; tpr: number[] };
+  roc_curve: { false_positive_rate: number[]; true_positive_rate: number[] };
   recall_by_gender: Record<string, number>;
 }
 

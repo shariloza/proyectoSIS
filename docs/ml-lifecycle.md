@@ -6,10 +6,10 @@ Dataset → Validación → Preparación → Entrenamiento → Evaluación → A
 
 ## 1. Validación y preparación
 
-`ml/dataset.py` valida la estructura y falla rápido, informando todos los problemas a la vez.
+`machine_learning/dataset.py` valida la estructura y falla rápido, informando todos los problemas a la vez.
 Después aplica el tratamiento de [datasets.md](datasets.md) y produce un `PreparationReport`.
 
-## 2. Entrenamiento (`ml/training.py`)
+## 2. Entrenamiento (`machine_learning/training.py`)
 
 - Split estratificado **70/15/15** (train 19 499 · validación 4 179 · test 4 179), semilla **42**.
 - `Pipeline(ColumnTransformer → clasificador)`: imputación por mediana y escalado (numéricas),
@@ -24,7 +24,7 @@ Después aplica el tratamiento de [datasets.md](datasets.md) y produce un `Prepa
 
 ## 3. Evaluación y criterios de aceptación
 
-Definidos en la Fase 1, **antes de entrenar** (`ml/evaluation.py`):
+Definidos en la Fase 1, **antes de entrenar** (`machine_learning/evaluation.py`):
 
 | | Criterio | Umbral |
 |---|---|---|
@@ -35,7 +35,7 @@ Definidos en la Fase 1, **antes de entrenar** (`ml/evaluation.py`):
 | C5 | ROC-AUC del modelo menos ROC-AUC del Dummy | ≥ 0,25 |
 | C6 | Brecha de recall entre géneros | ≤ 0,05 |
 | C7 | Brecha de ROC-AUC entre validación y test | ≤ 0,03 |
-| C8 | Latencia p95 de una predicción | ≤ 100 ms |
+| C8 | Latencia (percentil 95) de una predicción | ≤ 100 ms |
 | C9 | (Re-entrenamiento) caída de ROC-AUC frente al activo | ≤ 0,01 |
 
 Si todos se cumplen, el modelo queda `APPROVED`; si alguno falla, queda `REJECTED`. Ningún
@@ -88,7 +88,7 @@ administrador vuelve a encolar si lo decide. El campo `attempts` queda como traz
 ## 7. Monitoreo
 
 - `GET /health/ready`: base de datos accesible y modelo activo cargable.
-- Cada predicción guarda `latency_ms`, `probability` y `model_version_id`, de modo que la
+- Cada predicción guarda `latency_milliseconds`, `probability` y `model_version_id`, de modo que la
   distribución de la probabilidad y la tasa de riesgo alto pueden consultarse por versión con SQL.
 - Logs JSON del worker para cada inicio, fin o fallo de entrenamiento.
 - **Pendiente:** alertas automáticas de drift. Hoy el análisis es manual sobre `predictions`.

@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from app.api.dependencies import Admin, registry_service
-from app.api.errors import doc
+from app.api.errors import documented_errors
 from app.modules.model_registry.application.service import ModelRegistryService
 from app.modules.model_registry.domain.status import ModelStatus
-from app.modules.model_registry.infrastructure.orm import ModelVersionRecord
+from app.modules.model_registry.infrastructure.records import ModelVersionRecord
 
 router = APIRouter(prefix="/models", tags=["Modelos"])
 
@@ -78,7 +78,7 @@ Registry = Annotated[ModelRegistryService, Depends(registry_service)]
     summary="Métricas del modelo activo",
     description="Público: versión en producción con sus métricas de evaluación.",
     response_model=ModelDetail,
-    responses=doc(404),
+    responses=documented_errors(404),
 )
 def active_model(registry: Registry) -> ModelDetail:
     return ModelDetail.of(registry.require_active())
@@ -88,7 +88,7 @@ def active_model(registry: Registry) -> ModelDetail:
     "",
     summary="Listar versiones del modelo (admin)",
     response_model=list[ModelSummary],
-    responses=doc(401, 403),
+    responses=documented_errors(401, 403),
 )
 def list_models(_: Admin, registry: Registry) -> list[ModelSummary]:
     return [ModelSummary.of(record) for record in registry.list()]
@@ -98,7 +98,7 @@ def list_models(_: Admin, registry: Registry) -> list[ModelSummary]:
     "/{model_id}",
     summary="Detalle de una versión (admin)",
     response_model=ModelDetail,
-    responses=doc(401, 403, 404),
+    responses=documented_errors(401, 403, 404),
 )
 def get_model(model_id: uuid.UUID, _: Admin, registry: Registry) -> ModelDetail:
     return ModelDetail.of(registry.get(model_id))
@@ -109,7 +109,7 @@ def get_model(model_id: uuid.UUID, _: Admin, registry: Registry) -> ModelDetail:
     summary="Activar una versión aprobada (admin)",
     description="Acción explícita: el modelo activo pasa a RETIRED y queda auditado.",
     response_model=ModelDetail,
-    responses=doc(401, 403, 404, 409),
+    responses=documented_errors(401, 403, 404, 409),
 )
 def activate(model_id: uuid.UUID, admin: Admin, registry: Registry) -> ModelDetail:
     return ModelDetail.of(registry.activate(model_id, admin.id))
@@ -119,7 +119,7 @@ def activate(model_id: uuid.UUID, admin: Admin, registry: Registry) -> ModelDeta
     "/rollback",
     summary="Volver a la versión activa anterior (admin)",
     response_model=ModelDetail,
-    responses=doc(401, 403, 409),
+    responses=documented_errors(401, 403, 409),
 )
 def rollback(admin: Admin, registry: Registry) -> ModelDetail:
     return ModelDetail.of(registry.rollback(admin.id))

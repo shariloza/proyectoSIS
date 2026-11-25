@@ -9,8 +9,8 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ml.dataset import DatasetValidationError, prepare, read_csv
-from app.modules.datasets.infrastructure.orm import DatasetRecord
+from app.machine_learning.dataset import DatasetValidationError, prepare, read_csv
+from app.modules.datasets.infrastructure.records import DatasetRecord
 from app.shared.errors import (
     ConflictError,
     InvalidInputError,
@@ -23,9 +23,9 @@ ALLOWED_CONTENT_TYPES = frozenset({"text/csv", "application/vnd.ms-excel", "appl
 
 
 class DatasetService:
-    def __init__(self, session: Session, artifacts_dir: Path, max_bytes: int) -> None:
+    def __init__(self, session: Session, artifacts_directory: Path, max_bytes: int) -> None:
         self._session = session
-        self._storage_dir = artifacts_dir / "datasets"
+        self._storage_directory = artifacts_directory / "datasets"
         self._max_bytes = max_bytes
 
     @property
@@ -55,13 +55,13 @@ class DatasetService:
 
         try:
             prepared = prepare(read_csv(io.BytesIO(content)))
-        except DatasetValidationError as exc:
+        except DatasetValidationError as error:
             raise InvalidInputError(
-                "El archivo no cumple el formato esperado.", exc.problems
+                "El archivo no cumple el formato esperado.", error.problems
             ) from None
 
-        self._storage_dir.mkdir(parents=True, exist_ok=True)
-        stored = self._storage_dir / f"{sha256}.csv"
+        self._storage_directory.mkdir(parents=True, exist_ok=True)
+        stored = self._storage_directory / f"{sha256}.csv"
         stored.write_bytes(content)
 
         record = DatasetRecord(

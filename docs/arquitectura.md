@@ -36,13 +36,13 @@ flowchart LR
 main.py          fábrica de la app FastAPI (middleware, CORS, errores, routers)
 worker.py        proceso worker (señales, heartbeat)
 bootstrap.py     inicialización idempotente: admin + dataset semilla + modelo v1
-orm.py           registra todas las tablas (lo importa todo punto de entrada)
+records.py       registra todas las tablas (lo importa todo punto de entrada)
 config.py        Settings validadas al iniciar (fail fast)
 api/             dependencias HTTP, permisos, formato único de error
-ml/              contrato del dataset, preparación, features, entrenamiento, evaluación, artefactos
+machine_learning/ contrato del dataset, preparación, features, entrenamiento, evaluación, artefactos
 shared/          base de datos, errores de aplicación, logs JSON, rate limiting
 modules/
-  auth/            domain (Role, Principal) · application (AuthService) · infrastructure (ORM, Argon2, JWT) · presentation
+  auth/            domain (Role, Principal) · application (AuthService) · infrastructure (records, Argon2, JWT) · presentation
   prediction/      domain (RiskBand, aviso) · application (PredictionService) · infrastructure · presentation
   model_registry/  domain (estados y transiciones) · application (registro, activación, rollback, caché del modelo) · infrastructure · presentation
   datasets/        application (validación y versionado) · infrastructure · presentation
@@ -52,14 +52,14 @@ modules/
 
 **Reglas de dependencia.** `presentation → application → domain`. Los servicios de aplicación usan
 los modelos ORM de su módulo directamente: se decidió no agregar una capa de repositorios porque
-serían envoltorios vacíos de SQLAlchemy (KISS). `ml/` es una biblioteca pura, sin FastAPI ni base
+serían envoltorios vacíos de SQLAlchemy (KISS). `machine_learning/` es una biblioteca pura, sin FastAPI ni base
 de datos, y la usan por igual el entrenamiento, el worker y la inferencia. Así el preprocesamiento
 es uno solo y no hay *training/serving skew*.
 
 ### Flujo de una predicción
 
 1. `POST /api/v1/predictions`: Pydantic valida tipos, rangos y categorías con el contrato de
-   `ml/schema.py`. Rechaza campos extra.
+   `machine_learning/schema.py`. Rechaza campos extra.
 2. `PredictionService` obtiene el modelo `ACTIVE`. `ActiveModelProvider` lo tiene en memoria y lo
    recarga solo si cambió la versión activa; antes de cargarlo verifica el hash y las versiones de
    las librerías.

@@ -1,13 +1,13 @@
 # Testing
 
-Todas las cifras de esta página corresponden a ejecuciones reales del 23 y 24/11/2026.
+Todas las cifras de esta página corresponden a ejecuciones reales del 23 al 25/11/2026.
 
 | Suite | Herramienta | Tests | Contra | Comando |
 |---|---|---|---|---|
 | Unitarias + contrato | pytest | 30 + 4 | — | `uv run pytest tests/unit tests/contract` |
-| ML | pytest | 25 | dataset real | `uv run pytest tests/ml` |
-| Integración + API | pytest + TestClient | 7 + 32 | **PostgreSQL real** (base temporal por suite) | `uv run pytest tests/integration tests/api` |
-| **Total backend** | | **98** | | `uv run pytest` (≈ 4 min) |
+| ML | pytest | 25 | dataset real | `uv run pytest tests/machine_learning` |
+| Integración + API | pytest + TestClient | 8 + 32 | **PostgreSQL real** (base temporal por suite) | `uv run pytest tests/integration tests/api` |
+| **Total backend** | | **99** | | `uv run pytest` (≈ 4 min) |
 | Frontend | Vitest + Testing Library | 11 | jsdom | `npm test` |
 | End-to-end | Playwright (Chromium) | 8 | **sistema completo en Docker** | `npm run e2e` (≈ 2–5 min) |
 
@@ -51,7 +51,7 @@ ciclo completo subir → re-entrenar → comparar → activar → rollback.
 | El worker no arrancaba: no registraba la tabla `admin_users` (FK sin resolver) | `tests/unit/test_entrypoints.py` (falla sin la corrección) |
 | La subida leía el archivo completo antes de validar el tamaño | `test_oversized_file_is_rejected` |
 | Open redirect después del login | `src/lib/safe-redirect.test.ts` |
-| Sin memoria al entrenar con `n_jobs=-1` en una máquina de 6 GB | Suite completa (98 tests) estable con paralelismo acotado |
+| Sin memoria al entrenar con `n_jobs=-1` en una máquina de 6 GB | Suite completa (99 tests) estable con paralelismo acotado |
 | Las gráficas se capturaban a mitad de su animación y desbordaban sus tarjetas | Capturas de las E2E |
 
 ## Limitaciones de las pruebas

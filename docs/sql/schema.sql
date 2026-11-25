@@ -134,5 +134,16 @@ CREATE INDEX ix_predictions_model_version_created_at ON predictions (model_versi
 
 INSERT INTO alembic_version (version_num) VALUES ('0001') RETURNING alembic_version.version_num;
 
+-- Running upgrade 0001 -> 0002
+
+ALTER TABLE predictions RENAME latency_ms TO latency_milliseconds;
+
+UPDATE predictions
+            SET input_features = (input_features - 'cgpa')
+                || jsonb_build_object('grade_point_average', input_features -> 'cgpa')
+            WHERE input_features ? 'cgpa';
+
+UPDATE alembic_version SET version_num='0002' WHERE alembic_version.version_num = '0001';
+
 COMMIT;
 

@@ -286,7 +286,7 @@ fieldset {
 }
 
 /* Botones */
-.btn {
+.button {
   font: inherit;
   font-weight: 600;
   border-radius: var(--radius-sm);
@@ -298,22 +298,22 @@ fieldset {
   align-items: center;
   gap: 0.4rem;
 }
-.btn-primary {
+.button-primary {
   background: var(--primary);
   color: var(--on-primary);
 }
-.btn-primary:hover:not(:disabled) {
+.button-primary:hover:not(:disabled) {
   background: var(--primary-strong);
 }
-.btn-secondary {
+.button-secondary {
   background: var(--surface);
   color: var(--ink);
   border-color: var(--border);
 }
-.btn-secondary:hover:not(:disabled) {
+.button-secondary:hover:not(:disabled) {
   background: var(--surface-muted);
 }
-.btn:disabled {
+.button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -468,7 +468,7 @@ th {
   background: var(--surface-muted);
   white-space: nowrap;
 }
-.num {
+.numeric {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

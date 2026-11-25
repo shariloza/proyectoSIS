@@ -72,6 +72,6 @@ class TokenService:
                 audience=self._audience,
                 options={"require": ["sub", "role", "iss", "aud", "exp", "iat"]},
             )
-        except jwt.PyJWTError as exc:
-            raise InvalidTokenError(str(exc)) from None
+        except jwt.PyJWTError as error:
+            raise InvalidTokenError(str(error)) from None
         return claims

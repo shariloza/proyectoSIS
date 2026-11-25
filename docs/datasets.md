@@ -16,13 +16,13 @@ El EDA es reproducible con `backend/scripts/figures.py` y genera las figuras de
 
 ## Contrato (lo que se acepta para entrenar)
 
-Definido en un único lugar: [backend/src/app/ml/schema.py](../backend/src/app/ml/schema.py).
+Definido en un único lugar: [backend/src/app/machine_learning/schema.py](../backend/src/app/machine_learning/schema.py).
 
 | Columna original | Feature | Tipo | Dominio aceptado |
 |---|---|---|---|
 | `Gender` | `gender` | categórica | Male, Female |
 | `Age` | `age` | numérica | 18–60 |
-| `CGPA` | `cgpa` | numérica | 0,01–10 |
+| `CGPA` | `grade_point_average` | numérica | 0,01–10 |
 | `Academic Pressure` | `academic_pressure` | numérica | 1–5 |
 | `Study Satisfaction` | `study_satisfaction` | numérica | 1–5 |
 | `Work/Study Hours` | `work_study_hours` | numérica | 0–12 |

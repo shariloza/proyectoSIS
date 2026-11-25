@@ -34,10 +34,10 @@ en la Fase 6.
 
 | # | Hallazgo | Corrección | Prueba de regresión |
 |---|---|---|---|
-| 1 | La subida leía el archivo completo en memoria antes de validar el tamaño (por el puerto directo de la API) | Lectura acotada a `MAX_UPLOAD_MB + 1` byte | `test_oversized_file_is_rejected` |
+| 1 | La subida leía el archivo completo en memoria antes de validar el tamaño (por el puerto directo de la API) | Lectura acotada a `MAX_UPLOAD_MEGABYTES + 1` byte | `test_oversized_file_is_rejected` |
 | 2 | React Router < 6.30.3 con vulnerabilidades de open redirect (GHSA-2w69-qvjg-hvjx, GHSA-2j2x-hqr9-3h42) | Actualizado a 6.30.6 | `npm audit` |
 | 3 | La redirección después del login usaba `state.from` sin validar | `safeInternalPath` solo permite rutas internas | `safe-redirect.test.ts` |
-| 4 | El entrenamiento usaba `n_jobs=-1`, con riesgo de quedarse sin memoria (worker limitado a 2 GB) | Paralelismo acotado (`N_JOBS = 2`, `OPENBLAS_NUM_THREADS=1`) | Suite completa en una máquina de 6 GB |
+| 4 | El entrenamiento usaba `n_jobs=-1`, con riesgo de quedarse sin memoria (worker limitado a 2 GB) | Paralelismo acotado (`PARALLEL_JOBS = 2`, `OPENBLAS_NUM_THREADS=1`) | Suite completa en una máquina de 6 GB |
 
 Auditoría de dependencias (24/11/2026): `pip-audit` no encontró vulnerabilidades en las
 dependencias de producción del backend. `npm audit --omit=dev` reporta 2 avisos **moderados** que

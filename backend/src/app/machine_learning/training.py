@@ -11,17 +11,21 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 
-from app.ml.evaluation import check_acceptance, evaluate, latency_p95_ms
-from app.ml.features import build_preprocessor
+from app.machine_learning.evaluation import (
+    check_acceptance,
+    evaluate,
+    latency_95th_percentile_milliseconds,
+)
+from app.machine_learning.features import build_preprocessor
 
 RANDOM_SEED = 42
 VALIDATION_SIZE = 0.15
 TEST_SIZE = 0.15
-CV_FOLDS = 5
+CROSS_VALIDATION_FOLDS = 5
 # Si dos modelos difieren en menos que esto (ROC-AUC de validación), se elige el más simple.
 SIMPLICITY_TOLERANCE = 0.005
 # Paralelismo acotado: cada proceso copia los datos; el worker tiene un límite de 2 GB.
-N_JOBS = 2
+PARALLEL_JOBS = 2
 
 
 @dataclass(frozen=True)
@@ -56,12 +60,12 @@ def default_candidates(seed: int = RANDOM_SEED) -> list[Candidate]:
 
 @dataclass(frozen=True)
 class Split:
-    x_train: pd.DataFrame
-    x_val: pd.DataFrame
-    x_test: pd.DataFrame
-    y_train: pd.Series
-    y_val: pd.Series
-    y_test: pd.Series
+    train_features: pd.DataFrame
+    validation_features: pd.DataFrame
+    test_features: pd.DataFrame
+    train_target: pd.Series
+    validation_target: pd.Series
+    test_target: pd.Series
 
 
 @dataclass(frozen=True)
@@ -77,18 +81,25 @@ class TrainingResult:
 
 
 def split_dataset(features: pd.DataFrame, target: pd.Series, seed: int = RANDOM_SEED) -> Split:
-    """Train/val/test estratificado. El test solo se usa una vez, al final."""
-    x_rest, x_test, y_rest, y_test = train_test_split(
+    """Divide en entrenamiento, validación y test (estratificado). El test se usa una sola vez."""
+    remaining_features, test_features, remaining_target, test_target = train_test_split(
         features, target, test_size=TEST_SIZE, stratify=target, random_state=seed
     )
-    x_train, x_val, y_train, y_val = train_test_split(
-        x_rest,
-        y_rest,
+    train_features, validation_features, train_target, validation_target = train_test_split(
+        remaining_features,
+        remaining_target,
         test_size=VALIDATION_SIZE / (1 - TEST_SIZE),
-        stratify=y_rest,
+        stratify=remaining_target,
         random_state=seed,
     )
-    return Split(x_train, x_val, x_test, y_train, y_val, y_test)
+    return Split(
+        train_features,
+        validation_features,
+        test_features,
+        train_target,
+        validation_target,
+        test_target,
+    )
 
 
 def train(
@@ -99,7 +110,7 @@ def train(
 ) -> TrainingResult:
     candidates = candidates or default_candidates(seed)
     split = split_dataset(features, target, seed)
-    cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=seed)
+    folds = StratifiedKFold(n_splits=CROSS_VALIDATION_FOLDS, shuffle=True, random_state=seed)
 
     fitted: list[tuple[Candidate, Pipeline, dict[str, Any]]] = []
     comparison: list[dict[str, Any]] = []
@@ -109,53 +120,57 @@ def train(
             pipeline,
             {f"model__{key}": values for key, values in candidate.grid.items()},
             scoring="roc_auc",
-            cv=cv,
-            n_jobs=N_JOBS,
+            cv=folds,
+            n_jobs=PARALLEL_JOBS,
         )
-        search.fit(split.x_train, split.y_train)
+        search.fit(split.train_features, split.train_target)
         model: Pipeline = search.best_estimator_
-        val_metrics = evaluate(model, split.x_val, split.y_val)
-        params = {key.removeprefix("model__"): value for key, value in search.best_params_.items()}
-        fitted.append((candidate, model, params))
+        candidate_metrics = evaluate(model, split.validation_features, split.validation_target)
+        hyperparameters = {
+            key.removeprefix("model__"): value for key, value in search.best_params_.items()
+        }
+        fitted.append((candidate, model, hyperparameters))
         comparison.append(
             {
                 "algorithm": candidate.name,
-                "best_params": params,
-                "cv_roc_auc": round(float(search.best_score_), 4),
-                "val_roc_auc": val_metrics["roc_auc"],
-                "val_f1_macro": val_metrics["f1_macro"],
-                "val_recall_1": val_metrics["per_class"]["1"]["recall"],
+                "best_hyperparameters": hyperparameters,
+                "cross_validation_roc_auc": round(float(search.best_score_), 4),
+                "validation_roc_auc": candidate_metrics["roc_auc"],
+                "validation_f1_macro": candidate_metrics["f1_macro"],
+                "validation_recall_risk_class": candidate_metrics["per_class"]["1"]["recall"],
             }
         )
 
-    best_auc = max(row["val_roc_auc"] for row in comparison[1:])
+    # El primer candidato es el modelo base (Dummy): solo sirve de referencia, nunca se elige.
+    best_validation_roc_auc = max(row["validation_roc_auc"] for row in comparison[1:])
     chosen_index = next(
         index
         for index, row in enumerate(comparison)
-        if index > 0 and row["val_roc_auc"] >= best_auc - SIMPLICITY_TOLERANCE
+        if index > 0 and row["validation_roc_auc"] >= best_validation_roc_auc - SIMPLICITY_TOLERANCE
     )
-    candidate, model, params = fitted[chosen_index]
-    dummy_model = fitted[0][1]
+    candidate, model, hyperparameters = fitted[chosen_index]
+    baseline_model = fitted[0][1]
 
-    validation_metrics = evaluate(model, split.x_val, split.y_val)
-    test_metrics = evaluate(model, split.x_test, split.y_test)
+    validation_metrics = evaluate(model, split.validation_features, split.validation_target)
+    test_metrics = evaluate(model, split.test_features, split.test_target)
+    baseline_metrics = evaluate(baseline_model, split.test_features, split.test_target)
     acceptance = check_acceptance(
         test_metrics,
-        validation_auc=validation_metrics["roc_auc"],
-        dummy_auc=evaluate(dummy_model, split.x_test, split.y_test)["roc_auc"],
-        latency_ms=latency_p95_ms(model, split.x_test),
+        validation_roc_auc=validation_metrics["roc_auc"],
+        baseline_roc_auc=baseline_metrics["roc_auc"],
+        latency_milliseconds=latency_95th_percentile_milliseconds(model, split.test_features),
     )
     return TrainingResult(
         algorithm=candidate.name,
         model=model,
-        hyperparameters=params,
+        hyperparameters=hyperparameters,
         comparison=comparison,
         validation_metrics=validation_metrics,
         test_metrics=test_metrics,
         acceptance=acceptance,
         split_sizes={
-            "train": len(split.x_train),
-            "val": len(split.x_val),
-            "test": len(split.x_test),
+            "train": len(split.train_features),
+            "validation": len(split.validation_features),
+            "test": len(split.test_features),
         },
     )

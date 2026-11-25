@@ -18,7 +18,7 @@ para la clase de riesgo, y cumple los 8 criterios de aceptación definidos antes
 El modelo se expone mediante una **API REST** (FastAPI) que permite predecir, consultar el
 historial y las métricas, subir archivos de entrenamiento y re-entrenar de forma asíncrona, con
 activación explícita y rollback. Un **cliente web** (React) consume todos los endpoints. Todo se
-ejecuta con Docker Compose y se valida con **98 tests de backend, 11 de frontend y 8 end-to-end**.
+ejecuta con Docker Compose y se valida con **99 tests de backend, 11 de frontend y 8 end-to-end**.
 
 ## 2. Metodología y cronograma
 
@@ -82,7 +82,7 @@ Dormir menos de 5 horas y una alimentación poco saludable también se asocian c
 **Criterios de aceptación** (fijados antes de entrenar): ROC-AUC ≥ 0,85, recall de la clase 1
 ≥ 0,80 (un falso negativo cuesta más que un falso positivo), precisión ≥ 0,75, F1 macro ≥ 0,78,
 mejora sobre el Dummy ≥ 0,25, brecha de recall entre géneros ≤ 0,05, diferencia entre validación
-y test ≤ 0,03, latencia p95 ≤ 100 ms y, para re-entrenamientos, no empeorar al modelo activo en más
+y test ≤ 0,03, latencia (percentil 95) ≤ 100 ms y, para re-entrenamientos, no empeorar al modelo activo en más
 de 0,01 de ROC-AUC.
 
 ## 4. Fase 2: ingeniería de datos
@@ -98,7 +98,7 @@ Se verificaron con pandas 13 hallazgos de calidad, y cada uno tiene un tratamien
 | "Others" en sueño y alimentación; 0 en escalas 1–5; CGPA = 0 | 44 filas descartadas |
 | 3 nulos en estrés financiero | Imputación por mediana dentro del Pipeline |
 
-Resultado: **27 857 filas** utilizables. Un **contrato único** (`ml/schema.py`) define columnas,
+Resultado: **27 857 filas** utilizables. Un **contrato único** (`machine_learning/schema.py`) define columnas,
 rangos y categorías, y lo usan tanto la validación del dataset como la de la API. La validación
 falla rápido y reporta todos los problemas juntos (columnas faltantes, tipos, objetivo no binario,
 mínimo de 500 filas y máximo de 5 % de filas fuera de dominio). Detalle en [datasets.md](datasets.md).
@@ -120,7 +120,7 @@ mínimo de 500 filas y máximo de 5 % de filas fuera de dominio). Detalle en [da
 | HistGradientBoosting | 0,873 | 0,869 | 0,786 |
 
 **Elección:** regresión logística. Empata con el boosting y, ante métricas equivalentes, se
-prefiere el modelo más simple, interpretable y liviano (7 KB, 39 ms p95).
+prefiere el modelo más simple, interpretable y liviano (7 KB y 23 ms por predicción en el percentil 95).
 
 ## 6. Fase 4: evaluación y aseguramiento de calidad
 
@@ -147,7 +147,7 @@ Resultados en el conjunto de **test**, usado una sola vez:
 | C5 Mejora sobre el Dummy | ≥ 0,25 | 0,370 | ✅ |
 | C6 Brecha de recall hombres/mujeres | ≤ 0,05 | 0,005 | ✅ |
 | C7 Brecha validación/test | ≤ 0,03 | 0,001 | ✅ |
-| C8 Latencia p95 | ≤ 100 ms | 38,9 ms | ✅ |
+| C8 Latencia (percentil 95) | ≤ 100 ms | 22,6 ms | ✅ |
 
 **Reproducibilidad:** el entrenamiento local y el realizado dentro de Docker dieron métricas
 idénticas. Cada versión registra el hash del dataset, los hiperparámetros, la semilla, las
@@ -231,7 +231,7 @@ que confirma el backend.
 
 ## 8. Fase 6: monitoreo, mantenimiento y pruebas
 
-- **Pruebas** ([testing.md](testing.md)): 98 tests de backend (unitarios, ML, integración contra
+- **Pruebas** ([testing.md](testing.md)): 99 tests de backend (unitarios, ML, integración contra
   PostgreSQL real, API, contrato y permisos), 11 de frontend y 8 end-to-end con Playwright contra
   el sistema en Docker, incluido el ciclo subir → re-entrenar → activar → rollback.
 - **CI** en cada PR: lint, tipos, tests, build y E2E.

@@ -1,16 +1,19 @@
-from app.ml.dataset import PreparedDataset
-from app.ml.evaluation import ACCEPTANCE_CRITERIA, check_acceptance, no_regression
-from app.ml.training import Candidate, split_dataset, train
+from app.machine_learning.dataset import PreparedDataset
+from app.machine_learning.evaluation import ACCEPTANCE_CRITERIA, check_acceptance, no_regression
+from app.machine_learning.training import Candidate, split_dataset, train
 
 
 def test_split_is_stratified_and_disjoint(prepared: PreparedDataset) -> None:
     split = split_dataset(prepared.features, prepared.target)
 
-    indexes = [set(part.index) for part in (split.x_train, split.x_val, split.x_test)]
+    indexes = [
+        set(part.index)
+        for part in (split.train_features, split.validation_features, split.test_features)
+    ]
     assert not (indexes[0] & indexes[1] or indexes[0] & indexes[2] or indexes[1] & indexes[2])
     assert sum(map(len, indexes)) == len(prepared.features)
     overall = prepared.target.mean()
-    for target in (split.y_train, split.y_val, split.y_test):
+    for target in (split.train_target, split.validation_target, split.test_target):
         assert abs(target.mean() - overall) < 0.02
 
 
@@ -31,7 +34,7 @@ def test_dummy_is_never_selected(
 
     assert result.algorithm == "LogisticRegression"
     assert result.comparison[0]["algorithm"] == "DummyClassifier"
-    assert result.test_metrics["roc_auc"] > result.comparison[0]["val_roc_auc"]
+    assert result.test_metrics["roc_auc"] > result.comparison[0]["validation_roc_auc"]
 
 
 def test_acceptance_reports_every_criterion_and_fails_if_any_fails() -> None:
@@ -42,7 +45,9 @@ def test_acceptance_reports_every_criterion_and_fails_if_any_fails() -> None:
         "recall_by_gender": {"Male": 0.70, "Female": 0.71},
     }
 
-    report = check_acceptance(metrics, validation_auc=0.89, dummy_auc=0.5, latency_ms=5)
+    report = check_acceptance(
+        metrics, validation_roc_auc=0.89, baseline_roc_auc=0.5, latency_milliseconds=5
+    )
 
     assert len(report["criteria"]) == len(ACCEPTANCE_CRITERIA)
     failed = [c["code"] for c in report["criteria"] if not c["passed"]]
@@ -51,5 +56,5 @@ def test_acceptance_reports_every_criterion_and_fails_if_any_fails() -> None:
 
 
 def test_retraining_cannot_degrade_active_model() -> None:
-    assert no_regression(candidate_auc=0.865, active_auc=0.870)
-    assert not no_regression(candidate_auc=0.850, active_auc=0.870)
+    assert no_regression(candidate_roc_auc=0.865, active_roc_auc=0.870)
+    assert not no_regression(candidate_roc_auc=0.850, active_roc_auc=0.870)

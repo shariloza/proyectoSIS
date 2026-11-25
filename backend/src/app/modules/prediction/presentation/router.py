@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query, status
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, WithJsonSchema
 
 from app.api.dependencies import Admin, limit_predictions, prediction_service
-from app.api.errors import doc
-from app.ml.schema import CATEGORICAL_FEATURES, NUMERIC_FEATURES
+from app.api.errors import documented_errors
+from app.machine_learning.schema import CATEGORICAL_FEATURES, NUMERIC_FEATURES
 from app.modules.prediction.application.service import PredictionService
 from app.modules.prediction.domain.risk_band import DISCLAIMER, RiskBand
 
@@ -35,15 +35,15 @@ class _OneOf:
         return value
 
 
-_gender, _sleep, _diet, _education, _family = (
+_gender, _sleep_duration, _dietary_habits, _education_level, _family_history = (
     _OneOf(name)
     for name in ("gender", "sleep_duration", "dietary_habits", "education_level", "family_history")
 )
 Gender = Annotated[str, _gender.validator, _gender.schema]
-SleepDuration = Annotated[str, _sleep.validator, _sleep.schema]
-DietaryHabits = Annotated[str, _diet.validator, _diet.schema]
-EducationLevel = Annotated[str, _education.validator, _education.schema]
-YesNo = Annotated[str, _family.validator, _family.schema]
+SleepDuration = Annotated[str, _sleep_duration.validator, _sleep_duration.schema]
+DietaryHabits = Annotated[str, _dietary_habits.validator, _dietary_habits.schema]
+EducationLevel = Annotated[str, _education_level.validator, _education_level.schema]
+YesNo = Annotated[str, _family_history.validator, _family_history.schema]
 
 
 class StudentProfileIn(BaseModel):
@@ -56,7 +56,7 @@ class StudentProfileIn(BaseModel):
                 {
                     "gender": "Female",
                     "age": 21,
-                    "cgpa": 7.5,
+                    "grade_point_average": 7.5,
                     "academic_pressure": 4,
                     "study_satisfaction": 2,
                     "work_study_hours": 9,
@@ -72,7 +72,7 @@ class StudentProfileIn(BaseModel):
 
     gender: Gender = Field(description="Género")
     age: int = _numeric("age", "Edad en años")
-    cgpa: float = _numeric("cgpa", "Promedio académico (escala 0-10)")
+    grade_point_average: float = _numeric("grade_point_average", "Promedio académico (escala 0-10)")
     academic_pressure: int = _numeric("academic_pressure", "Presión académica percibida (1-5)")
     study_satisfaction: int = _numeric("study_satisfaction", "Satisfacción con los estudios (1-5)")
     work_study_hours: int = _numeric("work_study_hours", "Horas diarias de estudio/trabajo")
@@ -123,7 +123,7 @@ Service = Annotated[PredictionService, Depends(prediction_service)]
         "la probabilidad, la versión del modelo y la fecha. Límite: 30 solicitudes/min por IP."
     ),
     response_model=PredictionOut,
-    responses=doc(422, 429, 503),
+    responses=documented_errors(422, 429, 503),
     dependencies=[Depends(limit_predictions)],
 )
 def predict(body: StudentProfileIn, service: Service) -> PredictionOut:
@@ -146,7 +146,7 @@ def predict(body: StudentProfileIn, service: Service) -> PredictionOut:
         "Paginado, del más reciente al más antiguo. Restringido: son datos de salud mental."
     ),
     response_model=PredictionPage,
-    responses=doc(401, 403, 422),
+    responses=documented_errors(401, 403, 422),
 )
 def history(
     _: Admin,

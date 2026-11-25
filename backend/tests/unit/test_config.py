@@ -22,8 +22,8 @@ VALID_ENV = {
     "ADMIN_EMAIL": "admin@example.com",
     "ADMIN_PASSWORD": "a-strong-password",
     "CORS_ORIGINS": '["http://localhost:5173"]',
-    "ARTIFACTS_DIR": "./artifacts",
-    "MAX_UPLOAD_MB": "10",
+    "ARTIFACTS_DIRECTORY": "./artifacts",
+    "MAX_UPLOAD_MEGABYTES": "10",
     "TRAINING_TIMEOUT_SECONDS": "900",
 }
 
@@ -64,7 +64,7 @@ def test_missing_variable_fails_fast_naming_it(env: pytest.MonkeyPatch) -> None:
         ("POSTGRES_PORT", "70000"),
         ("ADMIN_EMAIL", "not-an-email"),
         ("ENVIRONMENT", "staging"),
-        ("MAX_UPLOAD_MB", "500"),
+        ("MAX_UPLOAD_MEGABYTES", "500"),
     ],
 )
 def test_invalid_value_fails_fast(env: pytest.MonkeyPatch, variable: str, value: str) -> None:

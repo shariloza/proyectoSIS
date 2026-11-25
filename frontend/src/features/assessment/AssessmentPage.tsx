@@ -47,7 +47,7 @@ export function AssessmentPage() {
                 max={60}
                 required
                 value={profile.age}
-                onChange={(e) => set("age", Number(e.target.value))}
+                onChange={(event) => set("age", Number(event.target.value))}
               />
             </div>
             <SelectField
@@ -65,16 +65,16 @@ export function AssessmentPage() {
               onChange={(value) => set("education_level", value)}
             />
             <div className="field">
-              <label htmlFor="cgpa">Promedio académico (0 a 10)</label>
+              <label htmlFor="grade_point_average">Promedio académico (0 a 10)</label>
               <input
-                id="cgpa"
+                id="grade_point_average"
                 type="number"
                 min={0.01}
                 max={10}
                 step={0.01}
                 required
-                value={profile.cgpa}
-                onChange={(e) => set("cgpa", Number(e.target.value))}
+                value={profile.grade_point_average}
+                onChange={(event) => set("grade_point_average", Number(event.target.value))}
               />
             </div>
           </div>
@@ -113,7 +113,7 @@ export function AssessmentPage() {
               min={0}
               max={12}
               value={profile.work_study_hours}
-              onChange={(e) => set("work_study_hours", Number(e.target.value))}
+              onChange={(event) => set("work_study_hours", Number(event.target.value))}
             />
           </div>
 
@@ -142,7 +142,7 @@ export function AssessmentPage() {
           </div>
 
           <ErrorAlert error={prediction.error} />
-          <button className="btn btn-primary" type="submit" disabled={prediction.isPending}>
+          <button className="button button-primary" type="submit" disabled={prediction.isPending}>
             {prediction.isPending ? "Calculando…" : "Estimar mi nivel de riesgo"}
           </button>
         </form>

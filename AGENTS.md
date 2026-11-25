@@ -10,13 +10,16 @@ Guía para agentes de IA (y personas) que trabajen en este repositorio.
 - **Ramas:** `feature/<tema>` desde `dev`, con un PR por fase hacia `dev`. `main` solo recibe PRs desde `dev`.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `ci:`).
 - **Idioma:** código e identificadores en inglés; documentación, mensajes de error al usuario y UI en español.
+- **Nombres:** completos y sin abreviaturas (`validation_features`, no `x_val`; `error`, no `exc`;
+  `grade_point_average`, no `cgpa`). Solo se aceptan siglas que son el nombre estándar de algo:
+  API, CSV, JSON, JWT, HTTP, SQL, UUID, SHA-256, CORS, ROC-AUC y F1.
 - **Backend:** módulos en `backend/src/app/modules/<módulo>/{domain,application,infrastructure,presentation}`. Solo se crean las capas que el módulo necesita. Sin lógica de negocio en controladores ni en repositorios.
-- **Base de datos:** todo cambio de esquema se hace con una migración de Alembic revisada a mano. El test `test_migration_matches_orm_models` falla si el ORM y las migraciones divergen.
+- **Base de datos:** todo cambio de esquema se hace con una migración de Alembic revisada a mano. El test `test_migration_matches_records` falla si los modelos de SQLAlchemy (`records.py`) y las migraciones divergen.
 - **Configuración:** toda variable nueva se agrega a `Settings` (con validación), a `.env.example` y al bloque `env` del CI.
 
 - **Contrato de la API:** al cambiar endpoints, regenerar `docs/openapi.json` y los tipos del
   frontend (`npm run gen:api`). El CI falla si quedan desincronizados.
-- **ML:** columnas, rangos y categorías se definen solo en `backend/src/app/ml/schema.py`.
+- **ML:** columnas, rangos y categorías se definen solo en `backend/src/app/machine_learning/schema.py`.
 - **Documentación:** describe el sistema real. Al cambiar el comportamiento, actualizar `docs/`.
 
 ## Comandos

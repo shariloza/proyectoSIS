@@ -10,7 +10,7 @@ const PAGE_SIZE = 15;
 const INPUT_LABELS: Record<string, string> = {
   age: "Edad",
   gender: "Género",
-  cgpa: "Promedio",
+  grade_point_average: "Promedio",
   academic_pressure: "Presión académica",
   study_satisfaction: "Satisfacción",
   work_study_hours: "Horas estudio",
@@ -54,7 +54,7 @@ export function HistoryPage() {
                     <th>Fecha</th>
                     <th>Datos enviados</th>
                     <th>Resultado</th>
-                    <th className="num">Probabilidad</th>
+                    <th className="numeric">Probabilidad</th>
                     <th>Modelo</th>
                   </tr>
                 </thead>
@@ -70,7 +70,7 @@ export function HistoryPage() {
                       <td>
                         <span className={`badge badge-${item.risk_band}`}>{RISK_LABEL[item.risk_band]}</span>
                       </td>
-                      <td className="num">{percent(item.probability)}</td>
+                      <td className="numeric">{percent(item.probability)}</td>
                       <td>{item.model_version}</td>
                     </tr>
                   ))}
@@ -83,16 +83,16 @@ export function HistoryPage() {
               </span>
               <div className="row">
                 <button
-                  className="btn btn-secondary"
+                  className="button button-secondary"
                   disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
+                  onClick={() => setPage((current) => current - 1)}
                 >
                   ← Anterior
                 </button>
                 <button
-                  className="btn btn-secondary"
+                  className="button button-secondary"
                   disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={() => setPage((current) => current + 1)}
                 >
                   Siguiente →
                 </button>

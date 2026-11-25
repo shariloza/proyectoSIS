@@ -13,7 +13,7 @@ from typing import BinaryIO
 
 import pandas as pd
 
-from app.ml.schema import (
+from app.machine_learning.schema import (
     CATEGORICAL_FEATURES,
     EDUCATION_LEVEL_BY_DEGREE,
     EXCLUDED_COLUMNS,
@@ -63,8 +63,8 @@ def file_sha256(path: Path) -> str:
 def read_csv(source: Path | BinaryIO) -> pd.DataFrame:
     try:
         return pd.read_csv(source)
-    except (pd.errors.ParserError, UnicodeDecodeError, pd.errors.EmptyDataError) as exc:
-        raise DatasetValidationError([f"el archivo no es un CSV legible ({exc})"]) from None
+    except (pd.errors.ParserError, UnicodeDecodeError, pd.errors.EmptyDataError) as error:
+        raise DatasetValidationError([f"el archivo no es un CSV legible ({error})"]) from None
 
 
 def validate_structure(raw: pd.DataFrame) -> None:

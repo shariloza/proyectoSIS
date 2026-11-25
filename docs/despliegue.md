@@ -32,8 +32,8 @@ Todas están en [.env.example](../.env.example). El backend no arranca si falta 
 | `JWT_SECRET`, `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_EXPIRE_MINUTES` | Tokens de administración |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Administrador inicial (lo crea el bootstrap) |
 | `CORS_ORIGINS` | Lista JSON de orígenes permitidos (desarrollo con Vite) |
-| `ARTIFACTS_DIR` | Modelos y datasets. En Docker: `/app/artifacts` (volumen) |
-| `MAX_UPLOAD_MB`, `TRAINING_TIMEOUT_SECONDS` | Límite de subida y timeout del re-entrenamiento |
+| `ARTIFACTS_DIRECTORY` | Modelos y datasets. En Docker: `/app/artifacts` (volumen) |
+| `MAX_UPLOAD_MEGABYTES`, `TRAINING_TIMEOUT_SECONDS` | Límite de subida y timeout del re-entrenamiento |
 
 ### Operación
 

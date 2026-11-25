@@ -1,7 +1,7 @@
 # Base de datos
 
 PostgreSQL 16. Todo el esquema se crea con migraciones de Alembic
-([backend/migrations](../backend/migrations)). El test `test_migration_matches_orm_models`
+([backend/migrations](../backend/migrations)). El test `test_migration_matches_records`
 garantiza que los modelos ORM y las migraciones no divergen.
 
 ## Diagrama entidad-relación
@@ -72,7 +72,7 @@ erDiagram
         smallint predicted_class "CHECK IN (0,1)"
         numeric probability "(5,4) CHECK 0..1"
         varchar(10) risk_band "LOW|MODERATE|HIGH"
-        integer latency_ms "CHECK >= 0"
+        integer latency_milliseconds "CHECK >= 0"
         timestamptz created_at
     }
 

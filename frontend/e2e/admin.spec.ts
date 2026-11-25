@@ -50,7 +50,8 @@ test.describe.serial("administración", () => {
 
     await page.getByRole("link", { name: "Usarlo para re-entrenar →" }).click();
     const enqueued = page.waitForResponse(
-      (r) => r.url().endsWith("/api/v1/training-jobs") && r.request().method() === "POST",
+      (response) =>
+        response.url().endsWith("/api/v1/training-jobs") && response.request().method() === "POST",
     );
     await page.getByRole("button", { name: "Re-entrenar" }).click();
     expect((await enqueued).status()).toBe(202);

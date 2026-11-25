@@ -32,7 +32,7 @@ POST /api/v1/predictions
 Content-Type: application/json
 
 {
-  "gender": "Female", "age": 21, "cgpa": 7.5,
+  "gender": "Female", "age": 21, "grade_point_average": 7.5,
   "academic_pressure": 4, "study_satisfaction": 2, "work_study_hours": 9,
   "financial_stress": 4, "sleep_duration": "5-6 hours", "dietary_habits": "Moderate",
   "education_level": "undergraduate", "family_history": "No"
@@ -55,7 +55,7 @@ Content-Type: application/json
 |---|---|---|
 | `gender` | enum | `Male`, `Female` |
 | `age` | int | 18–60 |
-| `cgpa` | float | 0,01–10 |
+| `grade_point_average` | float | 0,01–10 |
 | `academic_pressure`, `study_satisfaction`, `financial_stress` | int | 1–5 |
 | `work_study_hours` | int | 0–12 |
 | `sleep_duration` | enum | `Less than 5 hours`, `5-6 hours`, `7-8 hours`, `More than 8 hours` |
@@ -87,7 +87,7 @@ Todas las respuestas de error usan el mismo formato:
 | 403 | `FORBIDDEN` | Token válido sin rol de administrador |
 | 404 | `NOT_FOUND` | Recurso inexistente o sin modelo activo |
 | 409 | `CONFLICT` | Dataset duplicado, re-entrenamiento en curso, activación no permitida |
-| 413 | `PAYLOAD_TOO_LARGE` | Archivo mayor que `MAX_UPLOAD_MB` |
+| 413 | `PAYLOAD_TOO_LARGE` | Archivo mayor que `MAX_UPLOAD_MEGABYTES` |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | El archivo no es CSV |
 | 422 | `VALIDATION_ERROR` | Entrada o dataset inválidos (`details` lista cada problema) |
 | 429 | `RATE_LIMITED` | Límite de solicitudes superado |
