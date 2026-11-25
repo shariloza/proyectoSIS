@@ -2,9 +2,13 @@
 
 PostgreSQL 16. Todo el esquema se crea con migraciones de Alembic
 ([backend/migrations](../backend/migrations)). El test `test_migration_matches_records`
-garantiza que los modelos ORM y las migraciones no divergen.
+garantiza que los modelos de SQLAlchemy (`records.py`) y las migraciones no divergen.
 
 ## Diagrama entidad-relación
+
+El mismo diagrama, en formato DBML y con colores, está en [sql/diagrama.dbml](sql/diagrama.dbml).
+Para obtener la imagen: copiar el archivo en [dbdiagram.io](https://dbdiagram.io) y usar
+*Export → PNG* o *PDF*.
 
 ```mermaid
 erDiagram
