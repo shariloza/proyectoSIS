@@ -39,18 +39,19 @@ ACCEPTANCE_CRITERIA = (
     Criterion("C5", "Mejora de ROC-AUC sobre el modelo Dummy", 0.25),
     Criterion("C6", "Brecha de recall entre géneros", 0.05, higher_is_better=False),
     Criterion("C7", "Brecha de ROC-AUC validación vs test", 0.03, higher_is_better=False),
-    Criterion("C8", "Latencia p95 de una predicción (ms)", 100, higher_is_better=False),
+    Criterion("C8", "Latencia de una predicción, percentil 95 (ms)", 100, higher_is_better=False),
 )
 # C9 (re-entrenamiento): el candidato no puede bajar el ROC-AUC del activo en más de esto.
-MAX_AUC_REGRESSION = 0.01
+MAX_ROC_AUC_DROP = 0.01
 
 
 def evaluate(model: Pipeline, features: pd.DataFrame, target: pd.Series) -> dict[str, Any]:
     probabilities = model.predict_proba(features)[:, 1]
     predictions = (probabilities >= DECISION_THRESHOLD).astype(int)
     report = classification_report(target, predictions, output_dict=True, zero_division=0)
-    fpr, tpr, _ = roc_curve(target, probabilities)
-    sample = np.linspace(0, len(fpr) - 1, min(ROC_CURVE_POINTS, len(fpr))).astype(int)
+    false_positive_rate, true_positive_rate, _ = roc_curve(target, probabilities)
+    points = len(false_positive_rate)
+    sample = np.linspace(0, points - 1, min(ROC_CURVE_POINTS, points)).astype(int)
 
     return {
         "roc_auc": round(float(roc_auc_score(target, probabilities)), 4),
@@ -67,21 +68,24 @@ def evaluate(model: Pipeline, features: pd.DataFrame, target: pd.Series) -> dict
         },
         "confusion_matrix": confusion_matrix(target, predictions, labels=[0, 1]).tolist(),
         "roc_curve": {
-            "fpr": [round(float(v), 4) for v in fpr[sample]],
-            "tpr": [round(float(v), 4) for v in tpr[sample]],
+            "false_positive_rate": [round(float(rate), 4) for rate in false_positive_rate[sample]],
+            "true_positive_rate": [round(float(rate), 4) for rate in true_positive_rate[sample]],
         },
         "recall_by_gender": {
             str(gender): round(
                 float(recall_score(target[mask], predictions[mask.to_numpy()], zero_division=0)),
                 4,
             )
-            for gender, mask in ((g, features["gender"] == g) for g in ("Male", "Female"))
+            for gender, mask in ((name, features["gender"] == name) for name in ("Male", "Female"))
         },
         "threshold": DECISION_THRESHOLD,
     }
 
 
-def latency_p95_ms(model: Pipeline, features: pd.DataFrame, samples: int = 200) -> float:
+def latency_95th_percentile_milliseconds(
+    model: Pipeline, features: pd.DataFrame, samples: int = 200
+) -> float:
+    """Tiempo de una predicción individual por debajo del cual queda el 95 % de los casos."""
     rows = features.sample(n=min(samples, len(features)), random_state=0)
     timings = []
     for index in range(len(rows)):
@@ -93,9 +97,9 @@ def latency_p95_ms(model: Pipeline, features: pd.DataFrame, samples: int = 200) 
 
 def check_acceptance(
     test_metrics: dict[str, Any],
-    validation_auc: float,
-    dummy_auc: float,
-    latency_ms: float,
+    validation_roc_auc: float,
+    baseline_roc_auc: float,
+    latency_milliseconds: float,
 ) -> dict[str, Any]:
     recall = test_metrics["recall_by_gender"]
     observed = {
@@ -103,10 +107,10 @@ def check_acceptance(
         "C2": test_metrics["per_class"]["1"]["recall"],
         "C3": test_metrics["per_class"]["1"]["precision"],
         "C4": test_metrics["f1_macro"],
-        "C5": round(test_metrics["roc_auc"] - dummy_auc, 4),
+        "C5": round(test_metrics["roc_auc"] - baseline_roc_auc, 4),
         "C6": round(abs(recall["Male"] - recall["Female"]), 4),
-        "C7": round(abs(validation_auc - test_metrics["roc_auc"]), 4),
-        "C8": latency_ms,
+        "C7": round(abs(validation_roc_auc - test_metrics["roc_auc"]), 4),
+        "C8": latency_milliseconds,
     }
     results = [
         {
@@ -119,25 +123,25 @@ def check_acceptance(
         }
         for criterion in ACCEPTANCE_CRITERIA
     ]
-    return {"approved": all(r["passed"] for r in results), "criteria": results}
+    return {"approved": all(result["passed"] for result in results), "criteria": results}
 
 
-def no_regression(candidate_auc: float, active_auc: float) -> bool:
+def no_regression(candidate_roc_auc: float, active_roc_auc: float) -> bool:
     """C9: un re-entrenamiento no puede empeorar al modelo activo más de lo tolerado."""
-    return candidate_auc >= active_auc - MAX_AUC_REGRESSION
+    return candidate_roc_auc >= active_roc_auc - MAX_ROC_AUC_DROP
 
 
 def with_regression_check(
-    acceptance: dict[str, Any], candidate_auc: float, active_auc: float
+    acceptance: dict[str, Any], candidate_roc_auc: float, active_roc_auc: float
 ) -> dict[str, Any]:
     """Agrega C9 al reporte de aceptación de un candidato de re-entrenamiento."""
-    passed = no_regression(candidate_auc, active_auc)
+    passed = no_regression(candidate_roc_auc, active_roc_auc)
     criterion = {
         "code": "C9",
-        "description": f"No empeorar el ROC-AUC del modelo activo ({active_auc}) en más de",
-        "threshold": MAX_AUC_REGRESSION,
+        "description": f"No empeorar el ROC-AUC del modelo activo ({active_roc_auc}) en más de",
+        "threshold": MAX_ROC_AUC_DROP,
         "operator": "<=",
-        "value": round(active_auc - candidate_auc, 4),
+        "value": round(active_roc_auc - candidate_roc_auc, 4),
         "passed": passed,
     }
     return {

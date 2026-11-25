@@ -7,7 +7,7 @@ preparación de datos, el entrenamiento y la validación de la API.
 from dataclasses import dataclass
 from typing import Final
 
-PREPROCESSING_VERSION: Final = "1"
+PREPROCESSING_VERSION: Final = "2"
 TARGET: Final = "depression"
 
 
@@ -23,7 +23,7 @@ RAW_TO_CANONICAL: Final[dict[str, str]] = {
     "Gender": "gender",
     "Age": "age",
     "Academic Pressure": "academic_pressure",
-    "CGPA": "cgpa",
+    "CGPA": "grade_point_average",
     "Study Satisfaction": "study_satisfaction",
     "Sleep Duration": "sleep_duration",
     "Dietary Habits": "dietary_habits",
@@ -46,7 +46,7 @@ EXCLUDED_COLUMNS: Final[dict[str, str]] = {
 
 NUMERIC_FEATURES: Final = (
     NumericFeature("age", 18, 60),
-    NumericFeature("cgpa", 0.01, 10),
+    NumericFeature("grade_point_average", 0.01, 10),
     NumericFeature("academic_pressure", 1, 5),
     NumericFeature("study_satisfaction", 1, 5),
     NumericFeature("work_study_hours", 0, 12),

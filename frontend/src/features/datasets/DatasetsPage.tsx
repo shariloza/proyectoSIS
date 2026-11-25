@@ -46,8 +46,8 @@ export function DatasetsPage() {
             id="file"
             type="file"
             accept=".csv,text/csv"
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null);
+            onChange={(event) => {
+              setFile(event.target.files?.[0] ?? null);
               upload.reset();
             }}
           />
@@ -65,7 +65,7 @@ export function DatasetsPage() {
             <Link to="/admin/modelos">Usarlo para re-entrenar →</Link>
           </div>
         )}
-        <button className="btn btn-primary" type="submit" disabled={!file || upload.isPending}>
+        <button className="button button-primary" type="submit" disabled={!file || upload.isPending}>
           {upload.isPending ? "Validando…" : "Subir y validar"}
         </button>
       </form>
@@ -80,22 +80,22 @@ export function DatasetsPage() {
               <thead>
                 <tr>
                   <th>Archivo</th>
-                  <th className="num">Filas</th>
-                  <th className="num">Tamaño</th>
+                  <th className="numeric">Filas</th>
+                  <th className="numeric">Tamaño</th>
                   <th>SHA-256</th>
                   <th>Subido</th>
                 </tr>
               </thead>
               <tbody>
-                {datasets.data.map((d) => (
-                  <tr key={d.id}>
-                    <td>{d.original_filename}</td>
-                    <td className="num">{d.row_count.toLocaleString("es")}</td>
-                    <td className="num">{(d.size_bytes / 1024 / 1024).toFixed(2)} MB</td>
+                {datasets.data.map((dataset) => (
+                  <tr key={dataset.id}>
+                    <td>{dataset.original_filename}</td>
+                    <td className="numeric">{dataset.row_count.toLocaleString("es")}</td>
+                    <td className="numeric">{(dataset.size_bytes / 1024 / 1024).toFixed(2)} MB</td>
                     <td className="small">
-                      <code title={d.sha256}>{d.sha256.slice(0, 12)}…</code>
+                      <code title={dataset.sha256}>{dataset.sha256.slice(0, 12)}…</code>
                     </td>
-                    <td>{dateTime(d.created_at)}</td>
+                    <td>{dateTime(dataset.created_at)}</td>
                   </tr>
                 ))}
               </tbody>

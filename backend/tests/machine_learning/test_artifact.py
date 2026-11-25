@@ -3,16 +3,16 @@ from typing import Any
 
 import pytest
 
-from app.ml.artifact import (
+from app.machine_learning.artifact import (
     METADATA_FILE,
     MODEL_FILE,
     ArtifactError,
     load_model,
     save_model,
 )
-from app.ml.dataset import PreparedDataset
-from app.ml.training import Candidate, train
-from tests.ml.conftest import DATASET_PATH
+from app.machine_learning.dataset import PreparedDataset
+from app.machine_learning.training import Candidate, train
+from tests.machine_learning.conftest import DATASET_PATH
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def saved(
     result = train(prepared.features, prepared.target, fast_candidates)
     return save_model(
         result,
-        models_dir=tmp_path,
+        models_directory=tmp_path,
         version_name="v-test",
         dataset_path=DATASET_PATH,
         preparation=prepared.report,
@@ -57,7 +57,7 @@ def test_roundtrip_gives_identical_predictions(
     result = train(prepared.features, prepared.target, fast_candidates)
     metadata = save_model(
         result,
-        models_dir=tmp_path,
+        models_directory=tmp_path,
         version_name="v-roundtrip",
         dataset_path=DATASET_PATH,
         preparation=prepared.report,
@@ -84,7 +84,7 @@ def test_versions_are_immutable(
     with pytest.raises(ArtifactError, match="inmutables"):
         save_model(
             result,
-            models_dir=tmp_path,
+            models_directory=tmp_path,
             version_name="v-test",
             dataset_path=DATASET_PATH,
             preparation=prepared.report,

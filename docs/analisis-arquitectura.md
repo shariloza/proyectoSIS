@@ -33,7 +33,7 @@ La depresión en estudiantes universitarios es frecuente y suele detectarse tard
 | Diagrama de BD y script | Mermaid (sección 9) + SQL offline de Alembic en `docs/sql/` |
 | Documento Swagger | OpenAPI generado por FastAPI y exportado a `docs/openapi.json` |
 | Video de 5 minutos | Guion en `docs/guion-video.md` (Fase 7) |
-| Documento CRISP-ML(Q) y desarrollo | `docs/documento-final.md` |
+| Documento CRISP-ML(Q) y desarrollo | Documento final en Word (entregado aparte) |
 | Repositorio GitHub público y PR revisados por IA | Flujo `feature/*` → `dev` → `main`, 6 PR + 1 final |
 
 ### 1.4 Usuarios
@@ -69,7 +69,7 @@ Multi-tenancy, registro de estudiantes, notificaciones, explicabilidad por predi
 |---|---|---|
 | RNF-01 | Seguridad | JWT firmado (HS256) con `iss`, `aud`, `exp` de 60 min y contraseña con hash Argon2. Rutas de administración protegidas en el backend |
 | RNF-02 | Privacidad | Sin datos identificables: no se guardan nombre, ciudad, IP ni la pregunta de pensamientos suicidas. El historial solo es visible para el admin |
-| RNF-03 | Rendimiento | Inferencia p95 < 100 ms, con el modelo en memoria y recargado cuando cambia la activación |
+| RNF-03 | Rendimiento | Inferencia (percentil 95) < 100 ms, con el modelo en memoria y recargado cuando cambia la activación |
 | RNF-04 | Disponibilidad del modelo | Un re-entrenamiento fallido nunca altera el modelo activo |
 | RNF-05 | Trazabilidad | Cada predicción enlaza con `model_version_id`. Cada modelo enlaza con su dataset (hash) y su trabajo de entrenamiento |
 | RNF-06 | Reproducibilidad | Semilla fija, dependencias fijadas y hash de dataset y de artefacto |
@@ -362,7 +362,7 @@ erDiagram
         smallint predicted_class "CHECK IN (0,1)"
         numeric probability "CHECK 0..1, (5,4)"
         varchar risk_band "CHECK LOW|MODERATE|HIGH"
-        int latency_ms
+        int latency_milliseconds
         timestamptz created_at "NOT NULL DEFAULT now()"
     }
 
@@ -421,7 +421,7 @@ Medidos en el conjunto de **test**, sin la variable de pensamientos suicidas:
 | C5 | Mejora frente al Dummy | ROC-AUC del modelo − Dummy ≥ 0,25 | Demuestra que aprende algo real |
 | C6 | Equidad por género | \|recall(M) − recall(F)\| ≤ 0,05 | Sesgo controlado |
 | C7 | Generalización | \|AUC(validación) − AUC(test)\| ≤ 0,03 | Sin sobreajuste a la selección |
-| C8 | Operativos | Inferencia p95 < 100 ms y artefacto < 50 MB | Viable en la API |
+| C8 | Operativos | Inferencia (percentil 95) < 100 ms y artefacto < 50 MB | Viable en la API |
 | C9 | Re-entrenamiento | El candidato no baja el ROC-AUC del activo en más de 0,01, medido sobre el mismo test de referencia | No degradar la producción |
 
 Si C1–C3 no se alcanzan sin la variable excluida, **no se relaja el criterio en silencio**: se documenta el resultado real y se propone un ajuste justificado para tu aprobación (base, sección 1.9).

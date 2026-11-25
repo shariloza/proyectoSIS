@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from app.api.dependencies import AppState, auth_service, get_state, limit_logins
-from app.api.errors import doc
+from app.api.errors import documented_errors
 from app.modules.auth.application.service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
@@ -28,7 +28,7 @@ class TokenOut(BaseModel):
         "Devuelve un JWT para las rutas de administración. Limitado a 5 intentos/min por IP."
     ),
     response_model=TokenOut,
-    responses=doc(401, 422, 429),
+    responses=documented_errors(401, 422, 429),
     dependencies=[Depends(limit_logins)],
 )
 def login(

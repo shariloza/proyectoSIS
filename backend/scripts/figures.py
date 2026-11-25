@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 
-from app.ml.dataset import prepare, read_csv
+from app.machine_learning.dataset import prepare, read_csv
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
@@ -52,14 +52,17 @@ plt.rcParams.update(
 )
 
 
-def target_distribution(data: pd.DataFrame, out: Path) -> None:
+def target_distribution(data: pd.DataFrame, output_directory: Path) -> None:
     counts = data["depression"].value_counts().sort_index()
-    fig, ax = plt.subplots(figsize=(6, 4))
-    bars = ax.bar(
-        [CLASS_LABELS[i] for i in counts.index], counts.values, color=[NO_RISK, RISK], width=0.55
+    figure, axis = plt.subplots(figsize=(6, 4))
+    bars = axis.bar(
+        [CLASS_LABELS[label] for label in counts.index],
+        counts.values,
+        color=[NO_RISK, RISK],
+        width=0.55,
     )
     for bar, value in zip(bars, counts.values, strict=True):
-        ax.annotate(
+        axis.annotate(
             f"{value:,} ({value / counts.sum():.1%})".replace(",", "."),
             (bar.get_x() + bar.get_width() / 2, value),
             ha="center",
@@ -68,13 +71,13 @@ def target_distribution(data: pd.DataFrame, out: Path) -> None:
             xytext=(0, 4),
             textcoords="offset points",
         )
-    ax.set_title("Distribución de la variable objetivo")
-    ax.set_ylabel("Estudiantes")
-    ax.grid(axis="x", visible=False)
-    _save(fig, out / "01_distribucion_objetivo.png")
+    axis.set_title("Distribución de la variable objetivo")
+    axis.set_ylabel("Estudiantes")
+    axis.grid(axis="x", visible=False)
+    _save(figure, output_directory / "01_distribucion_objetivo.png")
 
 
-def risk_factors(data: pd.DataFrame, out: Path) -> None:
+def risk_factors(data: pd.DataFrame, output_directory: Path) -> None:
     panels = [
         ("academic_pressure", "Presión académica (1-5)", None),
         ("financial_stress", "Estrés financiero (1-5)", None),
@@ -94,146 +97,157 @@ def risk_factors(data: pd.DataFrame, out: Path) -> None:
         "Moderate": "Moderado",
         "Healthy": "Saludable",
     }
-    fig, axes = plt.subplots(2, 2, figsize=(10, 7), sharey=True)
-    for ax, (column, title, order) in zip(axes.flat, panels, strict=True):
+    figure, axes = plt.subplots(2, 2, figsize=(10, 7), sharey=True)
+    for axis, (column, title, order) in zip(axes.flat, panels, strict=True):
         rate = data.groupby(column)["depression"].mean()
         if order:
             rate = rate.reindex(order)
         names = [
             labels_es.get(str(k), str(int(k)) if isinstance(k, float) else k) for k in rate.index
         ]
-        ax.bar(names, rate.values * 100, color=RISK, width=0.6)
-        ax.set_title(title)
-        ax.set_ylim(0, 100)
-        ax.grid(axis="x", visible=False)
-    for ax in axes[:, 0]:
-        ax.set_ylabel("% con depresión")
-    fig.suptitle("Tasa de depresión según factores de riesgo", fontweight="bold", color=INK)
-    fig.tight_layout()
-    _save(fig, out / "02_factores_de_riesgo.png")
+        axis.bar(names, rate.values * 100, color=RISK, width=0.6)
+        axis.set_title(title)
+        axis.set_ylim(0, 100)
+        axis.grid(axis="x", visible=False)
+    for axis in axes[:, 0]:
+        axis.set_ylabel("% con depresión")
+    figure.suptitle("Tasa de depresión según factores de riesgo", fontweight="bold", color=INK)
+    figure.tight_layout()
+    _save(figure, output_directory / "02_factores_de_riesgo.png")
 
 
-def correlations(data: pd.DataFrame, out: Path) -> None:
+def correlations(data: pd.DataFrame, output_directory: Path) -> None:
     numeric = data.select_dtypes("number")
     names = {
         "age": "Edad",
-        "cgpa": "Promedio (CGPA)",
+        "grade_point_average": "Promedio (CGPA)",
         "academic_pressure": "Presión académica",
         "study_satisfaction": "Satisfacción estudio",
         "work_study_hours": "Horas estudio/trabajo",
         "financial_stress": "Estrés financiero",
         "depression": "Depresión",
     }
-    corr = numeric.rename(columns=names).corr()
-    fig, ax = plt.subplots(figsize=(7.5, 6))
-    image = ax.imshow(corr.values, cmap=DIVERGING, vmin=-1, vmax=1)
-    ax.set_xticks(range(len(corr)), corr.columns, rotation=40, ha="right")
-    ax.set_yticks(range(len(corr)), corr.columns)
-    ax.grid(visible=False)
-    for i in range(len(corr)):
-        for j in range(len(corr)):
-            ax.text(j, i, f"{corr.iloc[i, j]:.2f}", ha="center", va="center", color=INK, fontsize=8)
-    fig.colorbar(image, ax=ax, shrink=0.8, label="Correlación de Pearson")
-    ax.set_title("Correlación entre variables numéricas")
-    _save(fig, out / "03_correlaciones.png")
-
-
-def model_comparison(metadata: dict[str, Any], out: Path) -> None:
-    rows = metadata["comparison"]
-    names = [r["algorithm"].replace("Classifier", "") for r in rows]
-    metrics = [
-        ("cv_roc_auc", "ROC-AUC (CV 5 pliegues)", NO_RISK),
-        ("val_roc_auc", "ROC-AUC validación", RISK),
-    ]
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    width = 0.36
-    for offset, (key, label, color) in enumerate(metrics):
-        positions = [i + (offset - 0.5) * (width + 0.02) for i in range(len(rows))]
-        bars = ax.bar(positions, [r[key] for r in rows], width=width, color=color, label=label)
-        ax.bar_label(bars, fmt="%.3f", fontsize=8, color=INK, padding=2)
-    ax.axhline(0.85, color=INK_SECONDARY, linestyle="--", linewidth=1)
-    ax.text(-0.4, 0.86, "criterio C1 = 0,85", color=INK_SECONDARY, ha="left", fontsize=8)
-    ax.set_xticks(range(len(rows)), names)
-    ax.set_ylim(0.4, 1.0)
-    ax.set_ylabel("ROC-AUC")
-    ax.set_title(f"Comparación de modelos (elegido: {metadata['algorithm']})")
-    ax.legend(frameon=False, loc="upper left")
-    ax.grid(axis="x", visible=False)
-    _save(fig, out / "04_comparacion_modelos.png")
-
-
-def confusion(metadata: dict[str, Any], out: Path) -> None:
-    matrix = metadata["metrics"]["test"]["confusion_matrix"]
-    fig, ax = plt.subplots(figsize=(5.5, 4.8))
-    ax.imshow(matrix, cmap=SEQUENTIAL)
-    labels = list(CLASS_LABELS.values())
-    ax.set_xticks([0, 1], labels)
-    ax.set_yticks([0, 1], labels)
-    ax.set_xlabel("Predicción")
-    ax.set_ylabel("Valor real")
-    ax.grid(visible=False)
-    total = sum(map(sum, matrix))
-    darkest = max(map(max, matrix))
-    for i in range(2):
-        for j in range(2):
-            ax.text(
-                j,
-                i,
-                f"{matrix[i][j]:,}\n{matrix[i][j] / total:.1%}".replace(",", "."),
+    correlation = numeric.rename(columns=names).corr()
+    figure, axis = plt.subplots(figsize=(7.5, 6))
+    image = axis.imshow(correlation.values, cmap=DIVERGING, vmin=-1, vmax=1)
+    axis.set_xticks(range(len(correlation)), correlation.columns, rotation=40, ha="right")
+    axis.set_yticks(range(len(correlation)), correlation.columns)
+    axis.grid(visible=False)
+    for row in range(len(correlation)):
+        for column in range(len(correlation)):
+            axis.text(
+                column,
+                row,
+                f"{correlation.iloc[row, column]:.2f}",
                 ha="center",
                 va="center",
-                color=SURFACE if matrix[i][j] > darkest * 0.7 else INK,
+                color=INK,
+                fontsize=8,
+            )
+    figure.colorbar(image, ax=axis, shrink=0.8, label="Correlación de Pearson")
+    axis.set_title("Correlación entre variables numéricas")
+    _save(figure, output_directory / "03_correlaciones.png")
+
+
+def model_comparison(metadata: dict[str, Any], output_directory: Path) -> None:
+    rows = metadata["comparison"]
+    names = [row["algorithm"].replace("Classifier", "") for row in rows]
+    metrics = [
+        ("cross_validation_roc_auc", "ROC-AUC (CV 5 pliegues)", NO_RISK),
+        ("validation_roc_auc", "ROC-AUC validación", RISK),
+    ]
+    figure, axis = plt.subplots(figsize=(8, 4.5))
+    width = 0.36
+    for offset, (key, label, color) in enumerate(metrics):
+        positions = [index + (offset - 0.5) * (width + 0.02) for index in range(len(rows))]
+        bars = axis.bar(
+            positions, [row[key] for row in rows], width=width, color=color, label=label
+        )
+        axis.bar_label(bars, fmt="%.3f", fontsize=8, color=INK, padding=2)
+    axis.axhline(0.85, color=INK_SECONDARY, linestyle="--", linewidth=1)
+    axis.text(-0.4, 0.86, "criterio C1 = 0,85", color=INK_SECONDARY, ha="left", fontsize=8)
+    axis.set_xticks(range(len(rows)), names)
+    axis.set_ylim(0.4, 1.0)
+    axis.set_ylabel("ROC-AUC")
+    axis.set_title(f"Comparación de modelos (elegido: {metadata['algorithm']})")
+    axis.legend(frameon=False, loc="upper left")
+    axis.grid(axis="x", visible=False)
+    _save(figure, output_directory / "04_comparacion_modelos.png")
+
+
+def confusion(metadata: dict[str, Any], output_directory: Path) -> None:
+    matrix = metadata["metrics"]["test"]["confusion_matrix"]
+    figure, axis = plt.subplots(figsize=(5.5, 4.8))
+    axis.imshow(matrix, cmap=SEQUENTIAL)
+    labels = list(CLASS_LABELS.values())
+    axis.set_xticks([0, 1], labels)
+    axis.set_yticks([0, 1], labels)
+    axis.set_xlabel("Predicción")
+    axis.set_ylabel("Valor real")
+    axis.grid(visible=False)
+    total = sum(map(sum, matrix))
+    darkest = max(map(max, matrix))
+    for actual in range(2):
+        for predicted in range(2):
+            count = matrix[actual][predicted]
+            axis.text(
+                predicted,
+                actual,
+                f"{count:,}\n{count / total:.1%}".replace(",", "."),
+                ha="center",
+                va="center",
+                color=SURFACE if count > darkest * 0.7 else INK,
                 fontsize=11,
                 fontweight="bold",
             )
-    ax.set_title(f"Matriz de confusión — test ({metadata['version']})")
-    _save(fig, out / "05_matriz_confusion.png")
+    axis.set_title(f"Matriz de confusión — test ({metadata['version']})")
+    _save(figure, output_directory / "05_matriz_confusion.png")
 
 
-def roc(metadata: dict[str, Any], out: Path) -> None:
+def roc(metadata: dict[str, Any], output_directory: Path) -> None:
     curve = metadata["metrics"]["test"]["roc_curve"]
     auc = metadata["metrics"]["test"]["roc_auc"]
-    fig, ax = plt.subplots(figsize=(5.5, 5))
-    ax.plot(
-        curve["fpr"],
-        curve["tpr"],
+    figure, axis = plt.subplots(figsize=(5.5, 5))
+    axis.plot(
+        curve["false_positive_rate"],
+        curve["true_positive_rate"],
         color=NO_RISK,
         linewidth=2,
         label=f"{metadata['algorithm']} (AUC = {auc:.3f})",
     )
-    ax.plot(
+    axis.plot(
         [0, 1], [0, 1], color=INK_SECONDARY, linestyle="--", linewidth=1, label="Azar (AUC = 0,5)"
     )
-    ax.set_xlabel("Tasa de falsos positivos")
-    ax.set_ylabel("Tasa de verdaderos positivos (recall)")
-    ax.set_title("Curva ROC — conjunto de test")
-    ax.legend(frameon=False, loc="lower right")
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1.01)
-    _save(fig, out / "06_curva_roc.png")
+    axis.set_xlabel("Tasa de falsos positivos")
+    axis.set_ylabel("Tasa de verdaderos positivos (recall)")
+    axis.set_title("Curva ROC — conjunto de test")
+    axis.legend(frameon=False, loc="lower right")
+    axis.set_xlim(0, 1)
+    axis.set_ylim(0, 1.01)
+    _save(figure, output_directory / "06_curva_roc.png")
 
 
-def class_metrics(metadata: dict[str, Any], out: Path) -> None:
+def class_metrics(metadata: dict[str, Any], output_directory: Path) -> None:
     per_class = metadata["metrics"]["test"]["per_class"]
     metrics = [("precision", "Precisión"), ("recall", "Recall"), ("f1", "F1")]
-    fig, ax = plt.subplots(figsize=(7, 4))
+    figure, axis = plt.subplots(figsize=(7, 4))
     width = 0.36
     for offset, (label, color) in enumerate(((0, NO_RISK), (1, RISK))):
-        positions = [i + (offset - 0.5) * (width + 0.02) for i in range(len(metrics))]
+        positions = [index + (offset - 0.5) * (width + 0.02) for index in range(len(metrics))]
         values = [per_class[str(label)][key] for key, _ in metrics]
-        bars = ax.bar(positions, values, width=width, color=color, label=CLASS_LABELS[label])
-        ax.bar_label(bars, fmt="%.3f", fontsize=8, color=INK, padding=2)
-    ax.set_xticks(range(len(metrics)), [name for _, name in metrics])
-    ax.set_ylim(0, 1)
-    ax.set_title("Métricas por clase — conjunto de test")
-    ax.legend(frameon=False, loc="lower right")
-    ax.grid(axis="x", visible=False)
-    _save(fig, out / "07_metricas_por_clase.png")
+        bars = axis.bar(positions, values, width=width, color=color, label=CLASS_LABELS[label])
+        axis.bar_label(bars, fmt="%.3f", fontsize=8, color=INK, padding=2)
+    axis.set_xticks(range(len(metrics)), [name for _, name in metrics])
+    axis.set_ylim(0, 1)
+    axis.set_title("Métricas por clase — conjunto de test")
+    axis.legend(frameon=False, loc="lower right")
+    axis.grid(axis="x", visible=False)
+    _save(figure, output_directory / "07_metricas_por_clase.png")
 
 
-def _save(fig: plt.Figure, path: Path) -> None:
-    fig.savefig(path)
-    plt.close(fig)
+def _save(figure: plt.Figure, path: Path) -> None:
+    figure.savefig(path)
+    plt.close(figure)
     print(f"generada {path}")
 
 
@@ -242,20 +256,20 @@ def main() -> None:
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--metadata", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    args = parser.parse_args()
-    args.output.mkdir(parents=True, exist_ok=True)
+    arguments = parser.parse_args()
+    arguments.output.mkdir(parents=True, exist_ok=True)
 
-    prepared = prepare(read_csv(args.dataset))
+    prepared = prepare(read_csv(arguments.dataset))
     data = prepared.features.assign(depression=prepared.target)
-    metadata = json.loads(args.metadata.read_text(encoding="utf-8"))
+    metadata = json.loads(arguments.metadata.read_text(encoding="utf-8"))
 
-    target_distribution(data, args.output)
-    risk_factors(data, args.output)
-    correlations(data, args.output)
-    model_comparison(metadata, args.output)
-    confusion(metadata, args.output)
-    roc(metadata, args.output)
-    class_metrics(metadata, args.output)
+    target_distribution(data, arguments.output)
+    risk_factors(data, arguments.output)
+    correlations(data, arguments.output)
+    model_comparison(metadata, arguments.output)
+    confusion(metadata, arguments.output)
+    roc(metadata, arguments.output)
+    class_metrics(metadata, arguments.output)
 
 
 if __name__ == "__main__":

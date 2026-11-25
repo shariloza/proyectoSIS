@@ -7,13 +7,13 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.ml.evaluation import DECISION_THRESHOLD
-from app.ml.schema import FEATURE_COLUMNS
+from app.machine_learning.evaluation import DECISION_THRESHOLD
+from app.machine_learning.schema import FEATURE_COLUMNS
 from app.modules.model_registry.application.active_model import ActiveModelProvider
 from app.modules.model_registry.application.service import ModelRegistryService
-from app.modules.model_registry.infrastructure.orm import ModelVersionRecord
+from app.modules.model_registry.infrastructure.records import ModelVersionRecord
 from app.modules.prediction.domain.risk_band import band_for
-from app.modules.prediction.infrastructure.orm import PredictionRecord
+from app.modules.prediction.infrastructure.records import PredictionRecord
 from app.shared.errors import ServiceUnavailableError
 
 
@@ -32,7 +32,7 @@ class PredictionService:
         start = time.perf_counter()
         row = pd.DataFrame([features], columns=list(FEATURE_COLUMNS))
         probability = float(model.pipeline.predict_proba(row)[0, 1])
-        latency_ms = round((time.perf_counter() - start) * 1000)
+        latency_milliseconds = round((time.perf_counter() - start) * 1000)
 
         record = PredictionRecord(
             model_version_id=model.id,
@@ -40,7 +40,7 @@ class PredictionService:
             predicted_class=int(probability >= DECISION_THRESHOLD),
             probability=Decimal(f"{probability:.4f}"),
             risk_band=band_for(probability),
-            latency_ms=latency_ms,
+            latency_milliseconds=latency_milliseconds,
         )
         self._session.add(record)
         self._session.flush()

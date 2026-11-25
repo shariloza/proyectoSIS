@@ -20,14 +20,14 @@ from typing import Any
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.ml.artifact import METADATA_FILE, save_model
-from app.ml.dataset import prepare, read_csv
-from app.ml.evaluation import with_regression_check
-from app.ml.training import train
-from app.modules.datasets.infrastructure.orm import DatasetRecord
+from app.machine_learning.artifact import METADATA_FILE, save_model
+from app.machine_learning.dataset import prepare, read_csv
+from app.machine_learning.evaluation import with_regression_check
+from app.machine_learning.training import train
+from app.modules.datasets.infrastructure.records import DatasetRecord
 from app.modules.model_registry.application.service import ModelRegistryService
 from app.modules.training.domain.job_status import JobStatus
-from app.modules.training.infrastructure.orm import TrainingJobRecord
+from app.modules.training.infrastructure.records import TrainingJobRecord
 
 logger = logging.getLogger(__name__)
 
@@ -36,53 +36,53 @@ MAX_ERROR_LENGTH = 2000
 
 
 def train_and_save(
-    dataset_path: Path, models_dir: Path, version: str, active_auc: float | None
+    dataset_path: Path, models_directory: Path, version: str, active_roc_auc: float | None
 ) -> dict[str, Any]:
     """Prepara, entrena, evalúa (incluido C9 si hay modelo activo) y guarda el artefacto."""
     prepared = prepare(read_csv(dataset_path))
     result = train(prepared.features, prepared.target)
-    if active_auc is not None:
+    if active_roc_auc is not None:
         acceptance = with_regression_check(
-            result.acceptance, result.test_metrics["roc_auc"], active_auc
+            result.acceptance, result.test_metrics["roc_auc"], active_roc_auc
         )
         result = dataclasses.replace(result, acceptance=acceptance)
     return save_model(
         result,
-        models_dir=models_dir,
+        models_directory=models_directory,
         version_name=version,
         dataset_path=dataset_path,
         preparation=prepared.report,
     )
 
 
-def _child(
+def _train_in_child_process(
     dataset_path: Path,
-    models_dir: Path,
+    models_directory: Path,
     version: str,
-    active_auc: float | None,
+    active_roc_auc: float | None,
     errors: "multiprocessing.Queue[str]",
 ) -> None:
     try:
-        train_and_save(dataset_path, models_dir, version, active_auc)
-    except Exception as exc:
-        errors.put(f"{type(exc).__name__}: {exc}"[:MAX_ERROR_LENGTH])
+        train_and_save(dataset_path, models_directory, version, active_roc_auc)
+    except Exception as error:
+        errors.put(f"{type(error).__name__}: {error}"[:MAX_ERROR_LENGTH])
         raise SystemExit(1) from None
 
 
 class TrainingWorker:
     def __init__(
-        self, sessions: sessionmaker[Session], artifacts_dir: Path, timeout_seconds: int
+        self, sessions: sessionmaker[Session], artifacts_directory: Path, timeout_seconds: int
     ) -> None:
         self._sessions = sessions
-        self._artifacts_dir = artifacts_dir
-        self._models_dir = artifacts_dir / "models"
+        self._artifacts_directory = artifacts_directory
+        self._models_directory = artifacts_directory / "models"
         self._timeout = timeout_seconds
 
     def run_forever(
         self, poll_seconds: float, should_stop: Callable[[], bool], heartbeat_file: Path
     ) -> None:
         """Bucle principal. Toca `heartbeat_file` en cada vuelta (lo usa el healthcheck)."""
-        logger.info("worker iniciado", extra={"timeout_s": self._timeout})
+        logger.info("worker iniciado", extra={"timeout_seconds": self._timeout})
         while not should_stop():
             heartbeat_file.touch()
             if not self.run_once():
@@ -130,27 +130,27 @@ class TrainingWorker:
             job.started_at = job.heartbeat_at = now
             job.attempts += 1
             dataset = session.get_one(DatasetRecord, job.dataset_id)
-            return job.id, self._artifacts_dir / dataset.storage_path, dataset.id
+            return job.id, self._artifacts_directory / dataset.storage_path, dataset.id
 
     def _process(self, job_id: uuid.UUID, dataset_path: Path, dataset_id: uuid.UUID) -> None:
         with self._sessions() as session:
             registry = ModelRegistryService(session)
             version = registry.next_version_name()
             active = registry.get_active()
-            active_auc = active.metrics["test"]["roc_auc"] if active else None
+            active_roc_auc = active.metrics["test"]["roc_auc"] if active else None
         logger.info("entrenamiento iniciado", extra={"job_id": str(job_id), "version": version})
 
-        error = self._run_with_timeout(job_id, dataset_path, version, active_auc)
+        error = self._run_with_timeout(job_id, dataset_path, version, active_roc_auc)
         if error is not None:
             status, message = error
-            shutil.rmtree(self._models_dir / version, ignore_errors=True)
+            shutil.rmtree(self._models_directory / version, ignore_errors=True)
             self._finish(job_id, status, message)
             logger.warning(
                 "entrenamiento sin éxito", extra={"job_id": str(job_id), "status": status}
             )
             return
 
-        metadata_path = self._models_dir / version / METADATA_FILE
+        metadata_path = self._models_directory / version / METADATA_FILE
         metadata: dict[str, Any] = json.loads(metadata_path.read_text(encoding="utf-8"))
         try:
             with self._sessions.begin() as session:
@@ -159,7 +159,7 @@ class TrainingWorker:
                 )
                 self._mark(session, job_id, JobStatus.SUCCEEDED, None)
         except Exception:
-            shutil.rmtree(self._models_dir / version, ignore_errors=True)
+            shutil.rmtree(self._models_directory / version, ignore_errors=True)
             logger.exception("no se pudo registrar el modelo", extra={"job_id": str(job_id)})
             self._finish(job_id, JobStatus.FAILED, "No se pudo registrar la versión del modelo.")
             return
@@ -169,13 +169,13 @@ class TrainingWorker:
         )
 
     def _run_with_timeout(
-        self, job_id: uuid.UUID, dataset_path: Path, version: str, active_auc: float | None
+        self, job_id: uuid.UUID, dataset_path: Path, version: str, active_roc_auc: float | None
     ) -> tuple[JobStatus, str] | None:
         context = multiprocessing.get_context("spawn")
         errors: multiprocessing.Queue[str] = context.Queue()
         process = context.Process(
-            target=_child,
-            args=(dataset_path, self._models_dir, version, active_auc, errors),
+            target=_train_in_child_process,
+            args=(dataset_path, self._models_directory, version, active_roc_auc, errors),
             daemon=True,
         )
         process.start()

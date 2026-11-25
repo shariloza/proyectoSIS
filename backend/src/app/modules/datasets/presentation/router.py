@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, File, UploadFile, status
 from pydantic import BaseModel
 
 from app.api.dependencies import Admin, dataset_service
-from app.api.errors import doc
+from app.api.errors import documented_errors
 from app.modules.datasets.application.service import DatasetService
-from app.modules.datasets.infrastructure.orm import DatasetRecord
+from app.modules.datasets.infrastructure.records import DatasetRecord
 
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
 
@@ -39,7 +39,7 @@ Service = Annotated[DatasetService, Depends(dataset_service)]
         "columnas, tipos y dominios ANTES de aceptarlo. Se guarda versionado por su SHA-256."
     ),
     response_model=DatasetOut,
-    responses=doc(401, 403, 409, 413, 415, 422),
+    responses=documented_errors(401, 403, 409, 413, 415, 422),
 )
 async def upload(
     admin: Admin, service: Service, file: Annotated[UploadFile, File(description="Archivo .csv")]
@@ -54,7 +54,7 @@ async def upload(
     "",
     summary="Listar datasets subidos (admin)",
     response_model=list[DatasetOut],
-    responses=doc(401, 403),
+    responses=documented_errors(401, 403),
 )
 def list_datasets(_: Admin, service: Service) -> list[DatasetOut]:
     return [DatasetOut.of(record) for record in service.list()]

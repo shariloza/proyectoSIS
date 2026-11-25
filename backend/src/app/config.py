@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     admin_password: SecretStr = Field(min_length=12)
 
     cors_origins: list[str] = Field(min_length=1)
-    artifacts_dir: Path
-    max_upload_mb: int = Field(ge=1, le=50)
+    artifacts_directory: Path
+    max_upload_megabytes: int = Field(ge=1, le=50)
     training_timeout_seconds: int = Field(ge=60, le=3600)
 
     @property
@@ -61,10 +61,10 @@ def load_settings(env_file: Path | None = ROOT_ENV_FILE) -> Settings:
     """Construye la configuración y traduce los errores a un mensaje legible."""
     try:
         return Settings(_env_file=env_file)
-    except ValidationError as exc:
+    except ValidationError as error:
         problems = "; ".join(
-            f"{'.'.join(str(part) for part in error['loc']).upper()}: {error['msg']}"
-            for error in exc.errors()
+            f"{'.'.join(str(part) for part in issue['loc']).upper()}: {issue['msg']}"
+            for issue in error.errors()
         )
         raise ConfigurationError(f"Configuración inválida -> {problems}") from None
 

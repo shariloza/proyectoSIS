@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from httpx import Response
 
 from app.config import Settings
-from tests.ml.conftest import DATASET_PATH
+from tests.machine_learning.conftest import DATASET_PATH
 
 pytestmark = pytest.mark.integration
 
@@ -39,7 +39,7 @@ def test_valid_csv_is_accepted_and_versioned(
     body = response.json()
     assert body["row_count"] == 800
     assert "Have you ever had suicidal thoughts ?" in body["validation_report"]["excluded_columns"]
-    stored = settings.artifacts_dir / "datasets" / f"{body['sha256']}.csv"
+    stored = settings.artifacts_directory / "datasets" / f"{body['sha256']}.csv"
     assert stored.read_bytes() == content
 
 
@@ -71,7 +71,7 @@ def test_non_csv_is_rejected(client: TestClient, admin_headers: dict[str, str]) 
 def test_oversized_file_is_rejected(
     client: TestClient, admin_headers: dict[str, str], settings: Settings
 ) -> None:
-    oversized = b"a" * (settings.max_upload_mb * 1024 * 1024 + 1)
+    oversized = b"a" * (settings.max_upload_megabytes * 1024 * 1024 + 1)
 
     response = upload(client, admin_headers, oversized)
 

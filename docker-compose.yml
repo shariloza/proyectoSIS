@@ -10,7 +10,7 @@ x-backend: &backend
   environment:
     POSTGRES_HOST: db
     POSTGRES_PORT: "5432"
-    ARTIFACTS_DIR: /app/artifacts
+    ARTIFACTS_DIRECTORY: /app/artifacts
   volumes:
     - artifacts:/app/artifacts
   networks: [internal]

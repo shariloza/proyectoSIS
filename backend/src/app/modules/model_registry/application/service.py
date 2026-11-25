@@ -8,13 +8,13 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.ml.artifact import MODEL_FILE
+from app.machine_learning.artifact import MODEL_FILE
 from app.modules.model_registry.domain.status import (
     ActivationAction,
     ModelStatus,
     ensure_can_activate,
 )
-from app.modules.model_registry.infrastructure.orm import (
+from app.modules.model_registry.infrastructure.records import (
     ModelActivationEventRecord,
     ModelVersionRecord,
 )

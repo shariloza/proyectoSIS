@@ -15,7 +15,7 @@ from sqlalchemy import select
 
 from app.config import get_settings
 from app.modules.auth.application.service import AuthService
-from app.modules.auth.infrastructure.orm import AdminUserRecord
+from app.modules.auth.infrastructure.records import AdminUserRecord
 from app.modules.auth.infrastructure.security import PasswordHasher, TokenService
 from app.modules.datasets.application.service import DatasetService
 from app.modules.model_registry.application.service import ModelRegistryService
@@ -30,7 +30,7 @@ logger = logging.getLogger("app.bootstrap")
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seed-dataset", type=Path, required=True)
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
     settings = get_settings()
     configure_logging(settings.log_level)
@@ -54,21 +54,23 @@ def main() -> None:
             return
 
         datasets = DatasetService(
-            session, settings.artifacts_dir, max_bytes=settings.max_upload_mb * 1024 * 1024
+            session,
+            settings.artifacts_directory,
+            max_bytes=settings.max_upload_megabytes * 1024 * 1024,
         )
         try:
             dataset = datasets.upload(
-                args.seed_dataset.name, "text/csv", args.seed_dataset.read_bytes(), None
+                arguments.seed_dataset.name, "text/csv", arguments.seed_dataset.read_bytes(), None
             )
-        except ConflictError as exc:  # quedó registrado en un intento anterior
-            dataset = datasets.get(uuid.UUID(exc.details["dataset_id"]))
+        except ConflictError as error:  # quedó registrado en un intento anterior
+            dataset = datasets.get(uuid.UUID(error.details["dataset_id"]))
         version = registry.next_version_name()
         logger.info("entrenando modelo inicial", extra={"version": version})
         metadata = train_and_save(
-            settings.artifacts_dir / dataset.storage_path,
-            settings.artifacts_dir / "models",
+            settings.artifacts_directory / dataset.storage_path,
+            settings.artifacts_directory / "models",
             version,
-            active_auc=None,
+            active_roc_auc=None,
         )
         model = registry.register(metadata, dataset_id=dataset.id, training_job_id=None)
         if not metadata["acceptance"]["approved"]:

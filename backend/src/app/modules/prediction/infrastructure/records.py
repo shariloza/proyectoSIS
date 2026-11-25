@@ -28,7 +28,7 @@ class PredictionRecord(CreatedAtMixin, Base):
         enum_check("risk_band", RiskBand, "risk_band_allowed"),
         CheckConstraint("predicted_class IN (0, 1)", name="predicted_class_binary"),
         CheckConstraint("probability BETWEEN 0 AND 1", name="probability_range"),
-        CheckConstraint("latency_ms >= 0", name="latency_non_negative"),
+        CheckConstraint("latency_milliseconds >= 0", name="latency_non_negative"),
         Index("ix_predictions_created_at", "created_at"),
         Index("ix_predictions_model_version_created_at", "model_version_id", "created_at"),
     )
@@ -43,4 +43,4 @@ class PredictionRecord(CreatedAtMixin, Base):
     predicted_class: Mapped[int] = mapped_column(SmallInteger)
     probability: Mapped[Decimal] = mapped_column(Numeric(5, 4))
     risk_band: Mapped[str] = mapped_column(String(10))
-    latency_ms: Mapped[int] = mapped_column(Integer)
+    latency_milliseconds: Mapped[int] = mapped_column(Integer)

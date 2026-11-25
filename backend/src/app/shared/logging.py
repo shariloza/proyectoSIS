@@ -9,24 +9,30 @@ from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any
 
-request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
+request_id_context: ContextVar[str | None] = ContextVar("request_id", default=None)
 
-_STANDARD_ATTRS = set(logging.makeLogRecord({}).__dict__) | {"message", "asctime"}
+_STANDARD_ATTRIBUTES = set(logging.makeLogRecord({}).__dict__) | {"message", "asctime"}
 
 
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "ts": datetime.fromtimestamp(record.created, UTC).isoformat(timespec="milliseconds"),
+            "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat(
+                timespec="milliseconds"
+            ),
             "level": record.levelname,
             "logger": record.name,
-            "msg": record.getMessage(),
+            "message": record.getMessage(),
         }
-        if request_id := request_id_var.get():
+        if request_id := request_id_context.get():
             payload["request_id"] = request_id
-        payload |= {k: v for k, v in record.__dict__.items() if k not in _STANDARD_ATTRS}
+        payload |= {
+            name: value
+            for name, value in record.__dict__.items()
+            if name not in _STANDARD_ATTRIBUTES
+        }
         if record.exc_info:
-            payload["exc"] = self.formatException(record.exc_info)
+            payload["exception"] = self.formatException(record.exc_info)
         return json.dumps(payload, ensure_ascii=False, default=str)
 
 

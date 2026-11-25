@@ -4,8 +4,8 @@ import pandas as pd
 import pytest
 from sklearn.linear_model import LogisticRegression
 
-from app.ml.dataset import PreparedDataset, prepare
-from app.ml.training import Candidate, default_candidates
+from app.machine_learning.dataset import PreparedDataset, prepare
+from app.machine_learning.training import Candidate, default_candidates
 
 DATASET_PATH = (
     Path(__file__).resolve().parents[3] / "data" / "raw" / "student_depression_dataset.csv"

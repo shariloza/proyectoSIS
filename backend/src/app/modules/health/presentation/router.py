@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.dependencies import State
-from app.api.errors import doc
+from app.api.errors import documented_errors
 from app.modules.model_registry.application.service import ModelRegistryService
 from app.shared.errors import AppError, ServiceUnavailableError
 
@@ -27,7 +27,7 @@ def live() -> HealthOut:
     "/ready",
     summary="Readiness: base de datos accesible y modelo activo cargable",
     response_model=HealthOut,
-    responses=doc(503),
+    responses=documented_errors(503),
 )
 def ready(state: State) -> HealthOut:
     try:
@@ -39,6 +39,6 @@ def ready(state: State) -> HealthOut:
             loaded = state.models.get(active)
     except SQLAlchemyError:
         raise ServiceUnavailableError("La base de datos no responde.") from None
-    except AppError as exc:
-        raise ServiceUnavailableError(exc.message) from None
+    except AppError as error:
+        raise ServiceUnavailableError(error.message) from None
     return HealthOut(status="ok", model_version=loaded.version)

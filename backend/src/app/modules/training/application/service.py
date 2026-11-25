@@ -4,9 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.datasets.application.service import DatasetService
-from app.modules.model_registry.infrastructure.orm import ModelVersionRecord
+from app.modules.model_registry.infrastructure.records import ModelVersionRecord
 from app.modules.training.domain.job_status import ACTIVE_STATUSES
-from app.modules.training.infrastructure.orm import TrainingJobRecord
+from app.modules.training.infrastructure.records import TrainingJobRecord
 from app.shared.errors import ConflictError, NotFoundError
 
 RECENT_JOBS_LIMIT = 20

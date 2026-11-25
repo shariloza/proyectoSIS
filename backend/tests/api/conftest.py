@@ -12,17 +12,17 @@ from sqlalchemy import select
 
 from app.api.dependencies import AppState
 from app.config import Settings, get_settings
+from app.machine_learning.artifact import save_model
+from app.machine_learning.dataset import prepare
+from app.machine_learning.training import Candidate, default_candidates, train
 from app.main import build_state, create_app
-from app.ml.artifact import save_model
-from app.ml.dataset import prepare
-from app.ml.training import Candidate, default_candidates, train
 from app.modules.auth.application.service import AuthService
-from app.modules.auth.infrastructure.orm import AdminUserRecord
+from app.modules.auth.infrastructure.records import AdminUserRecord
 from app.modules.datasets.application.service import DatasetService
 from app.modules.model_registry.application.service import ModelRegistryService
 from app.shared.rate_limit import RateLimiter
 from tests.conftest import CreateDatabase, run_migrations
-from tests.ml.conftest import DATASET_PATH
+from tests.machine_learning.conftest import DATASET_PATH
 
 ADMIN_EMAIL = "admin@test.local"
 ADMIN_PASSWORD = "test-admin-password"
@@ -32,7 +32,7 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 VALID_PROFILE: dict[str, Any] = {
     "gender": "Female",
     "age": 21,
-    "cgpa": 7.5,
+    "grade_point_average": 7.5,
     "academic_pressure": 4,
     "study_satisfaction": 2,
     "work_study_hours": 9,
@@ -58,7 +58,7 @@ def settings(create_database: CreateDatabase, tmp_path_factory: pytest.TempPathF
     return get_settings().model_copy(
         update={
             "postgres_db": engine.url.database,
-            "artifacts_dir": tmp_path_factory.mktemp("artifacts"),
+            "artifacts_directory": tmp_path_factory.mktemp("artifacts"),
             "admin_email": ADMIN_EMAIL,
             "cors_origins": ["http://localhost:5173"],
         }
@@ -86,13 +86,13 @@ def _seed(state: AppState, sample_csv: Path) -> None:
     with state.sessions.begin() as session:
         AuthService(session, state.hasher, state.tokens).ensure_admin(ADMIN_EMAIL, ADMIN_PASSWORD)
     with state.sessions.begin() as session:
-        dataset = DatasetService(session, state.settings.artifacts_dir, MAX_UPLOAD_BYTES).upload(
-            "seed.csv", "text/csv", sample_csv.read_bytes(), None
-        )
+        dataset = DatasetService(
+            session, state.settings.artifacts_directory, MAX_UPLOAD_BYTES
+        ).upload("seed.csv", "text/csv", sample_csv.read_bytes(), None)
         prepared = prepare(pd.read_csv(sample_csv))
         metadata = save_model(
             train(prepared.features, prepared.target, fast_candidates()),
-            models_dir=state.settings.artifacts_dir / "models",
+            models_directory=state.settings.artifacts_directory / "models",
             version_name="v1",
             dataset_path=sample_csv,
             preparation=prepared.report,

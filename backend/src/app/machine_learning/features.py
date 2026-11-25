@@ -5,7 +5,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
-from app.ml.schema import (
+from app.machine_learning.schema import (
     DIETARY_HABITS,
     EDUCATION_LEVELS,
     GENDER,
